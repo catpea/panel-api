@@ -13,7 +13,7 @@
 
 import { PanelStack } from "./stack.js";
 import { PanelHandle } from "./handle.js";
-import { createPanelElement } from "./element.js";
+import { PanelController, PANEL_TAG } from "./element.js";
 import { applyDefaults, normalizeOptions, PANEL_DEFAULTS } from "./options.js";
 import { PANEL_EVENTS, dispatchPanelEvent } from "./events.js";
 
@@ -120,7 +120,12 @@ export class PanelManager extends EventTarget {
     const merged = applyDefaults(normalizeOptions(features), this.defaults);
     if (!merged.title) merged.title = title;
 
-    const handle = new PanelHandle(null, {
+    // Create the raw element and wire handle.element before initialize() runs,
+    // so plugins can access handle.element during installation.
+    const element = this.document.createElement(PANEL_TAG);
+    Object.assign(element, PanelController);
+
+    const handle = new PanelHandle(element, {
       manager: this,
       plugins: this.plugins,
       stack: this.stack,
@@ -128,7 +133,7 @@ export class PanelManager extends EventTarget {
       _mgr: this
     });
 
-    const element = createPanelElement(merged, {
+    element.initialize(merged, {
       manager: this,
       plugins: this.plugins,
       handle,
@@ -136,7 +141,6 @@ export class PanelManager extends EventTarget {
       get viewport() { return this._mgr._viewport; },
       _mgr: this
     });
-    handle.element = element;
 
     // beforepanelopen is the chance for code to mutate options or veto.
     const allowed = dispatchPanelEvent(element, PANEL_EVENTS.BEFORE_OPEN,
