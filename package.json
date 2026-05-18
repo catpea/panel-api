@@ -1,0 +1,26 @@
+{
+  "name": "panel-api",
+  "version": "1.0.2",
+  "description": "Panel API",
+  "main": "index.js",
+  "scripts": {
+    "dev": "http-server -c-1 ./ -o",
+    "save": "git add .; git commit -m 'Updated Release'; npm version patch; npm publish; git push --follow-tags;"
+  },
+  "type": "module",
+  "keywords": [ "panel", "panel-api" ],
+  "author": "catpea (https://github.com/catpea)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/catpea/panel-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/catpea/panel-api/issues"
+  },
+  "homepage": "https://catpea.github.io/panel-api",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/catpea"
+  }
+}
