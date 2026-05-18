@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Hello panel</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+  <main class="container py-5">
+    <a href="./index.html" class="text-decoration-none small"><i class="bi bi-chevron-left"></i> back</a>
+
+    <h1 class="display-6 mb-3 mt-3">Hello panel</h1>
+    <p class="text-secondary">
+      The simplest example: open a panel containing some HTML. The panel is draggable, resizable, focusable,
+      stackable, miniaturizable, and closable — all from default options.
+    </p>
+
+    <div class="d-flex gap-2 my-4">
+      <button id="openOne" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Open a panel</button>
+      <button id="closeAll" class="btn btn-outline-secondary">Close all panels</button>
+    </div>
+
+    <pre class="bg-body-tertiary p-3 rounded"><code>import panel from "../index.js";
+
+panel.open("", "Hello", { width: 360, height: 220 })
+     .setHTML("&lt;p&gt;Hello from Panel API.&lt;/p&gt;");</code></pre>
+  </main>
+
+  <script type="module">
+    import panel from "../index.js";
+
+    const open = () => {
+      const handle = panel.open("", "Hello", { width: 360, height: 220, left: 120 + Math.random() * 200, top: 120 + Math.random() * 100 });
+      handle.setHTML(`
+        <p>Hello from Panel API.</p>
+        <p class="text-secondary small">Drag the title bar to move. Drag the corner to resize. Press Esc to close.</p>
+        <button class="btn btn-sm btn-outline-light" id="b">Sample button inside the panel</button>
+      `);
+      handle.body.querySelector("#b").addEventListener("click", () => alert("clicked!"));
+    };
+
+    document.getElementById("openOne").addEventListener("click", open);
+    document.getElementById("closeAll").addEventListener("click", () => panel.closeAll());
+
+    // Auto-open one to greet visitors.
+    open();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

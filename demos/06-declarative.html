@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Declarative</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+  <main class="container py-5">
+    <a href="./index.html" class="text-decoration-none small"><i class="bi bi-chevron-left"></i> back</a>
+    <h1 class="display-6 mb-3 mt-3">Declarative</h1>
+    <p class="text-secondary">
+      Buttons with <code>paneltarget="id"</code> open a <code>&lt;section panel&gt;</code> with that id. No JS required.
+      The contents of the section become the panel body. When the panel closes, the contents are returned to the section.
+    </p>
+
+    <div class="d-flex gap-2 my-4 flex-wrap">
+      <button class="btn btn-primary" paneltarget="inspector" paneltargetaction="toggle">
+        <i class="bi bi-info-circle"></i> Toggle Inspector
+      </button>
+      <button class="btn btn-primary" paneltarget="library" paneltargetaction="toggle">
+        <i class="bi bi-collection"></i> Toggle Library
+      </button>
+    </div>
+
+    <pre class="bg-body-tertiary p-3 rounded mt-4"><code>&lt;button paneltarget="inspector" paneltargetaction="toggle"&gt;Inspector&lt;/button&gt;
+
+&lt;section id="inspector" panel
+         panel-title="Inspector"
+         panel-width="320" panel-height="280"
+         panel-draggable panel-resizable panel-closable
+         panel-focusable panel-stackable panel-titled panel-escapable&gt;
+  &lt;p&gt;Anything inside this section becomes the panel body.&lt;/p&gt;
+&lt;/section&gt;</code></pre>
+  </main>
+
+  <!--
+    Declarative panel sections are hidden by default (the styles.css ships
+    [panel]:not([panel-open]) { display: none; }). The Panel API promotes them
+    into floating panels when their `paneltarget` button is clicked.
+  -->
+  <section id="inspector" panel
+           panel-title="Inspector"
+           panel-width="320" panel-height="280"
+           panel-left="120" panel-top="200"
+           panel-draggable panel-resizable panel-closable
+           panel-focusable panel-stackable panel-titled panel-escapable>
+    <h2 class="h5">Inspector</h2>
+    <p>This entire section was declared in HTML.</p>
+    <p class="text-secondary small">Close the panel and the content returns to the page.</p>
+  </section>
+
+  <section id="library" panel
+           panel-title="Library"
+           panel-width="340" panel-height="320"
+           panel-left="500" panel-top="220"
+           panel-draggable panel-resizable panel-closable
+           panel-focusable panel-stackable panel-titled panel-escapable>
+    <h2 class="h5">Library</h2>
+    <ul>
+      <li>Item one</li>
+      <li>Item two</li>
+      <li>Item three</li>
+    </ul>
+  </section>
+
+  <script type="module">
+    // Importing panel-api auto-installs declarative support.
+    import panel from "../index.js";
+  </script>
+</body>
+</html>

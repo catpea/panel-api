@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Styling</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <style>
+    /*
+      The Panel API exposes every visual decision through CSS variables and
+      ::part selectors. You can theme an individual panel by adding a class
+      on the dom-panel element, or theme every panel by targeting dom-panel
+      directly in your stylesheet.
+    */
+
+    /* Apply a global "warm" theme to all panels. */
+    .theme-warm {
+      --panel-background: rgba(60, 22, 12, 0.92);
+      --panel-caption-background: rgba(40, 12, 6, 0.96);
+      --panel-color: #fbece0;
+      --panel-radius: 22px;
+      --panel-font-family: "Inter", "Avenir Next", system-ui, sans-serif;
+      --panel-font-size: 15px;
+    }
+
+    /* Bigger, rounded buttons in the caption. */
+    .theme-warm [part~="action"] {
+      inline-size: 32px;
+      block-size: 32px;
+      border-radius: 12px;
+      background: rgba(255, 220, 180, 0.08);
+    }
+
+    /* A custom button style inside the panel body. */
+    .styled-button {
+      border: 0;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #ffb27a, #ff7a59);
+      color: #1c0a04;
+      cursor: pointer;
+    }
+    .styled-button:hover { filter: brightness(1.05); }
+
+    .theme-mono {
+      --panel-background: #0a0a0a;
+      --panel-caption-background: #161616;
+      --panel-color: #e6e6e6;
+      --panel-font-family: "JetBrains Mono", ui-monospace, monospace;
+      --panel-radius: 4px;
+      --panel-border: 1px solid #2a2a2a;
+    }
+  </style>
+</head>
+<body>
+  <main class="container py-5">
+    <a href="./index.html" class="text-decoration-none small"><i class="bi bi-chevron-left"></i> back</a>
+    <h1 class="display-6 mb-3 mt-3">Styling: color, font, buttons</h1>
+    <p class="text-secondary">
+      Panels are styled with CSS custom properties (variables) and shadow parts. Override either at any scope —
+      global, per-theme class, or per-panel inline.
+    </p>
+
+    <div class="d-flex gap-2 my-4 flex-wrap">
+      <button id="openDefault" class="btn btn-secondary">Default panel</button>
+      <button id="openWarm"    class="btn btn-warning">Warm theme (class)</button>
+      <button id="openMono"    class="btn btn-light">Monospace theme</button>
+      <button id="openInline"  class="btn btn-info">Inline override</button>
+    </div>
+
+    <pre class="bg-body-tertiary p-3 rounded"><code>/* Theme by class — add the class to the panel element */
+.theme-warm {
+  --panel-background: rgba(60, 22, 12, 0.92);
+  --panel-color: #fbece0;
+  --panel-font-family: "Inter", system-ui, sans-serif;
+}
+
+/* Theme inline — set CSS variables on the handle.element */
+handle.element.style.setProperty("--panel-background", "#003040");
+handle.element.style.setProperty("--panel-color", "#a7e3ff");</code></pre>
+
+    <h2 class="h5 mt-4">CSS variables you can set</h2>
+    <ul class="text-secondary">
+      <li><code>--panel-background</code> · panel surface fill</li>
+      <li><code>--panel-color</code> · text color</li>
+      <li><code>--panel-caption-background</code> · caption (title bar) fill</li>
+      <li><code>--panel-caption-height</code> · caption height in px</li>
+      <li><code>--panel-radius</code> · corner radius</li>
+      <li><code>--panel-border</code> · panel border</li>
+      <li><code>--panel-shadow</code> / <code>--panel-shadow-focused</code></li>
+      <li><code>--panel-font-family</code>, <code>--panel-font-size</code></li>
+    </ul>
+
+    <h2 class="h5 mt-4">Shadow parts</h2>
+    <ul class="text-secondary">
+      <li><code>::part(caption)</code>, <code>::part(title)</code>, <code>::part(actions)</code>, <code>::part(action)</code></li>
+      <li><code>::part(body)</code>, <code>::part(resize-handle)</code></li>
+    </ul>
+  </main>
+
+  <script type="module">
+    import panel from "../index.js";
+
+    function makeContent(title) {
+      const wrap = document.createElement("div");
+      wrap.innerHTML = `
+        <p>This panel uses the <strong>${title}</strong> styling.</p>
+        <p class="text-secondary small">The button below is styled by the host page, not by the Panel API.</p>
+        <button class="styled-button" type="button">Custom button</button>
+      `;
+      wrap.querySelector("button").addEventListener("click", () => alert(`Hi from ${title}!`));
+      return wrap;
+    }
+
+    document.getElementById("openDefault").addEventListener("click", () => {
+      panel.open("", "Default", { width: 320, height: 220, left: 80, top: 120 })
+           .setContent(makeContent("default"));
+    });
+
+    document.getElementById("openWarm").addEventListener("click", () => {
+      const h = panel.open("", "Warm theme", { width: 360, height: 240, left: 120, top: 140 });
+      h.element.classList.add("theme-warm");
+      h.setContent(makeContent("warm theme"));
+    });
+
+    document.getElementById("openMono").addEventListener("click", () => {
+      const h = panel.open("", "console.log", { width: 380, height: 240, left: 160, top: 160 });
+      h.element.classList.add("theme-mono");
+      const node = document.createElement("pre");
+      node.textContent = `> panel.open("", "Hello")\n  PanelHandle {\n    element: <dom-panel>,\n    options: {…}\n  }`;
+      h.setContent(node);
+    });
+
+    document.getElementById("openInline").addEventListener("click", () => {
+      const h = panel.open("", "Inline override", { width: 320, height: 200, left: 200, top: 180 });
+      h.element.style.setProperty("--panel-background", "rgba(0, 48, 64, 0.92)");
+      h.element.style.setProperty("--panel-color", "#a7e3ff");
+      h.element.style.setProperty("--panel-radius", "8px");
+      h.element.style.setProperty("--panel-font-family", "Georgia, serif");
+      h.setContent(makeContent("inline override"));
+    });
+  </script>
+</body>
+</html>

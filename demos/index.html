@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Demos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+  <main class="container py-5">
+    <h1 class="display-5 mb-1"><i class="bi bi-window-stack"></i> Panel API</h1>
+    <p class="lead text-secondary">Floating, draggable, resizable panels for the web — plain ESM, no build, no dependencies.</p>
+
+    <h2 class="h4 mt-5 mb-3">Core demos</h2>
+    <div class="row g-3">
+      <a class="col-md-6 col-lg-4 text-decoration-none" href="./01-hello-panel.html">
+        <div class="card h-100"><div class="card-body">
+          <h3 class="h6"><i class="bi bi-1-circle"></i> Hello panel</h3>
+          <p class="text-secondary mb-0 small">The minimum viable example — one panel, one line of code.</p>
+        </div></div>
+      </a>
+      <a class="col-md-6 col-lg-4 text-decoration-none" href="./02-styling.html">
+        <div class="card h-100"><div class="card-body">
+          <h3 class="h6"><i class="bi bi-palette"></i> Styling</h3>
+          <p class="text-secondary mb-0 small">Change color, font, and button look via CSS variables and parts.</p>
+        </div></div>
+      </a>
+      <a class="col-md-6 col-lg-4 text-decoration-none" href="./03-multi-panel.html">
+        <div class="card h-100"><div class="card-body">
+          <h3 class="h6"><i class="bi bi-collection"></i> Multiple panels</h3>
+          <p class="text-secondary mb-0 small">Stacking, focus, dragging, resizing.</p>
+        </div></div>
+      </a>
+      <a class="col-md-6 col-lg-4 text-decoration-none" href="./04-toolbox.html">
+        <div class="card h-100"><div class="card-body">
+          <h3 class="h6"><i class="bi bi-tools"></i> Toolbox</h3>
+          <p class="text-secondary mb-0 small">Borderless, vertical panel of icon tools.</p>
+        </div></div>
+      </a>
+      <a class="col-md-6 col-lg-4 text-decoration-none" href="./05-clock.html">
+        <div class="card h-100"><div class="card-body">
+          <h3 class="h6"><i class="bi bi-clock-history"></i> Live clock</h3>
+          <p class="text-secondary mb-0 small">A panel that updates over time and cleans up after itself.</p>
+        </div></div>
+      </a>
+      <a class="col-md-6 col-lg-4 text-decoration-none" href="./06-declarative.html">
+        <div class="card h-100"><div class="card-body">
+          <h3 class="h6"><i class="bi bi-code-square"></i> Declarative</h3>
+          <p class="text-secondary mb-0 small">paneltarget / &lt;section panel&gt; HTML attributes.</p>
+        </div></div>
+      </a>
+    </div>
+
+    <h2 class="h4 mt-5 mb-3">ZUI demos</h2>
+    <div class="row g-3">
+      <a class="col-md-6 col-lg-4 text-decoration-none" href="./07-zui-viewport.html">
+        <div class="card h-100"><div class="card-body">
+          <h3 class="h6"><i class="bi bi-aspect-ratio"></i> ZUI viewport</h3>
+          <p class="text-secondary mb-0 small">A panel layer next to a zooming/panning world surface.</p>
+        </div></div>
+      </a>
+      <a class="col-md-6 col-lg-4 text-decoration-none" href="./08-zui-pinned-panels.html">
+        <div class="card h-100"><div class="card-body">
+          <h3 class="h6"><i class="bi bi-pin-angle"></i> Pinned panels</h3>
+          <p class="text-secondary mb-0 small">Panels that follow ZUI world coordinates.</p>
+        </div></div>
+      </a>
+      <a class="col-md-6 col-lg-4 text-decoration-none" href="./09-zui-framing-page.html">
+        <div class="card h-100"><div class="card-body">
+          <h3 class="h6"><i class="bi bi-bounding-box"></i> Framing a page</h3>
+          <p class="text-secondary mb-0 small">framePage() wraps a normal webpage and panels float on top.</p>
+        </div></div>
+      </a>
+    </div>
+
+    <h2 class="h4 mt-5 mb-3">Documentation</h2>
+    <div class="row g-3">
+      <a class="col-md-6 col-lg-3 text-decoration-none" href="../docs/api.md">
+        <div class="card h-100"><div class="card-body"><h3 class="h6"><i class="bi bi-book"></i> API</h3></div></div>
+      </a>
+      <a class="col-md-6 col-lg-3 text-decoration-none" href="../docs/plugins.md">
+        <div class="card h-100"><div class="card-body"><h3 class="h6"><i class="bi bi-plug"></i> Plugins</h3></div></div>
+      </a>
+      <a class="col-md-6 col-lg-3 text-decoration-none" href="../docs/zui.md">
+        <div class="card h-100"><div class="card-body"><h3 class="h6"><i class="bi bi-aspect-ratio"></i> ZUI</h3></div></div>
+      </a>
+      <a class="col-md-6 col-lg-3 text-decoration-none" href="../docs/styling.md">
+        <div class="card h-100"><div class="card-body"><h3 class="h6"><i class="bi bi-palette2"></i> Styling</h3></div></div>
+      </a>
+    </div>
+
+    <h2 class="h4 mt-5 mb-3">Tutorials (use the CDN)</h2>
+    <div class="row g-3">
+      <a class="col-md-6 col-lg-4 text-decoration-none" href="../tutorials/01-cdn-no-zui.html">
+        <div class="card h-100"><div class="card-body"><h3 class="h6">No ZUI — add a panel to any page</h3></div></div>
+      </a>
+      <a class="col-md-6 col-lg-4 text-decoration-none" href="../tutorials/02-cdn-with-zui.html">
+        <div class="card h-100"><div class="card-body"><h3 class="h6">With ZUI — sibling world surface</h3></div></div>
+      </a>
+      <a class="col-md-6 col-lg-4 text-decoration-none" href="../tutorials/03-cdn-zui-framing.html">
+        <div class="card h-100"><div class="card-body"><h3 class="h6">ZUI framing the page content</h3></div></div>
+      </a>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

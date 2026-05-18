@@ -1,14 +1,37 @@
 {
   "name": "panel-api",
   "version": "1.0.2",
-  "description": "Panel API",
-  "main": "index.js",
+  "description": "A durable application-chrome API for movable, resizable, in-page floating panels with optional ZUI (zooming user interface) integration. Plain ESM, no build step, no dependencies.",
+  "type": "module",
+  "main": "./index.js",
+  "module": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./zui": "./zui.js",
+    "./plugins/*": "./src/plugins/*.js",
+    "./core/*": "./src/core/*.js",
+    "./styles.css": "./src/core/styles.css"
+  },
+  "files": [
+    "index.js",
+    "zui.js",
+    "src",
+    "TODO.md"
+  ],
   "scripts": {
-    "dev": "http-server -c-1 ./ -o",
+    "dev": "http-server -c-1 ./ -o /demos/",
     "save": "git add .; git commit -m 'Updated Release'; npm version patch; npm publish; git push --follow-tags;"
   },
-  "type": "module",
-  "keywords": [ "panel", "panel-api" ],
+  "keywords": [
+    "panel",
+    "panel-api",
+    "floating-panel",
+    "zui",
+    "popover",
+    "dialog",
+    "web-components",
+    "esm"
+  ],
   "author": "catpea (https://github.com/catpea)",
   "license": "MIT",
   "repository": {

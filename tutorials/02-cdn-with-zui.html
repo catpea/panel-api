@@ -1,0 +1,141 @@
+<!doctype html>
+<!--
+  Panel API · Tutorial 02
+  Add a ZUI (zoom + pan) world surface and floating panels in a sibling layer.
+
+  Pattern: you provide two elements — a fixed "root" container and an inner
+  "surface" that will be transformed. The PanelViewport drives a translate +
+  scale on the surface. Panels live outside the surface so they stay crisp.
+-->
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Tutorial 02 (with ZUI)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <style>
+    /*
+      Two-element pattern: zui-root is fixed and clips; zui-surface lives
+      inside and is transformed. Both come with sensible defaults; you only
+      need to supply what makes sense for your design.
+    */
+    body { margin: 0; overflow: hidden; }
+    .zui-root {
+      position: fixed; inset: 0;
+      overflow: hidden;
+      container-type: size;
+      touch-action: none;
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 25% 20%, rgba(133, 82, 255, .28), transparent 30rem),
+        linear-gradient(135deg, #090633, #061445 48%, #10173c);
+    }
+    .zui-surface {
+      position: absolute;
+      left: 0; top: 0;
+      width: 100cqw; min-width: 1600px;
+      height: 100cqh; min-height: 1200px;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+    .demo-card {
+      position: absolute;
+      width: 320px;
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.13);
+      color: white;
+    }
+    .controls {
+      position: fixed;
+      top: 12px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+    }
+    .help {
+      position: fixed;
+      left: 12px; bottom: 12px;
+      max-width: 480px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.6);
+      color: rgba(255,255,255,.78);
+      font-size: 12px;
+      backdrop-filter: blur(8px);
+      z-index: 50;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="zui-root" id="root">
+    <div class="zui-surface" id="surface">
+      <article class="demo-card" style="left: 120px; top: 120px;">
+        <h2 class="h5">World card A</h2>
+        <p class="text-secondary mb-0 small">I'm inside the zoom/pan surface.</p>
+      </article>
+      <article class="demo-card" style="left: 700px; top: 400px;">
+        <h2 class="h5">World card B</h2>
+        <p class="text-secondary mb-0 small">I scale with the world.</p>
+      </article>
+      <article class="demo-card" style="left: 240px; top: 720px;">
+        <h2 class="h5">World card C</h2>
+        <p class="text-secondary mb-0 small">Panels stay crisp above me.</p>
+      </article>
+    </div>
+  </div>
+
+  <div class="controls btn-group">
+    <a href="../demos/index.html" class="btn btn-dark btn-sm"><i class="bi bi-chevron-left"></i></a>
+    <button id="openPanel" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Open a panel</button>
+    <button id="reset" class="btn btn-dark btn-sm"><i class="bi bi-aspect-ratio"></i> Reset</button>
+  </div>
+
+  <div class="help">
+    <strong>Tutorial 02 · ZUI with panels.</strong>
+    Drag the background to pan. Wheel to zoom. Panels live above the world surface and do not scale.
+    <br>
+    <code style="font-size: 11px;">import panel from 'https://cdn.jsdelivr.net/npm/panel-api/+esm';</code>
+    <br>
+    <code style="font-size: 11px;">import { PanelViewport, wireInteractions } from 'https://cdn.jsdelivr.net/npm/panel-api/zui/+esm';</code>
+  </div>
+
+  <script type="module">
+    // ---- step 1: import panel-api default + the zui entry ----
+    import panel from 'https://cdn.jsdelivr.net/npm/panel-api/+esm';
+    import { PanelViewport, wireInteractions } from 'https://cdn.jsdelivr.net/npm/panel-api/zui/+esm';
+
+    // ---- step 2: build a viewport from your root/surface markup ----
+    const viewport = new PanelViewport({
+      root:    document.getElementById("root"),
+      surface: document.getElementById("surface")
+    });
+
+    // ---- step 3: wire default pan/zoom interactions ----
+    wireInteractions(viewport);
+
+    // ---- step 4: tell panel-api about the viewport ----
+    // Plugins like `pinnable` use it to project panel positions into world
+    // coordinates so panels can follow zoom/pan when pinned.
+    panel.attachViewport(viewport);
+
+    // ---- you now have ZUI + Panels. Open a panel: ----
+    function openPanel() {
+      const handle = panel.open("", "Inspector", {
+        width: 320, height: 240, left: 24, top: 80
+      });
+      handle.setHTML(`
+        <p>I float above the world surface and stay the same size when you zoom.</p>
+        <p class="text-secondary small">Click the <i class="bi bi-pin-angle"></i> button to pin me to the world — then I'll follow.</p>
+      `);
+    }
+
+    document.getElementById("openPanel").addEventListener("click", openPanel);
+    document.getElementById("reset").addEventListener("click", () => viewport.reset());
+
+    openPanel();
+  </script>
+</body>
+</html>

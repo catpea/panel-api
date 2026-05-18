@@ -1,0 +1,96 @@
+<!doctype html>
+<!--
+  Panel API · Tutorial 01
+  Add a floating panel to an existing webpage. No ZUI.
+
+  Copy this file and serve it (or open via http-server) to try locally.
+  The only line you really need is the import + panel.open() call.
+
+  We use the baseboot.html starting point (Bootstrap + Bootstrap icons)
+  because it's a familiar, portable demo template.
+-->
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Tutorial 01 (no ZUI)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+  <main class="container py-5">
+    <a href="../demos/index.html" class="text-decoration-none small"><i class="bi bi-chevron-left"></i> back</a>
+
+    <h1 class="display-6 mt-3">Tutorial 01 · Floating panels, no ZUI</h1>
+    <p class="lead text-secondary">
+      The fastest way to add a movable, resizable panel to an existing webpage.
+      No build step, no dependencies. Just one ES module import.
+    </p>
+
+    <h2 class="h5 mt-5">1. Add the script</h2>
+    <p>Drop this single import into your page (as a module). No bundler required.</p>
+    <pre class="bg-body-tertiary p-3 rounded"><code>&lt;script type="module"&gt;
+  import panel from 'https://cdn.jsdelivr.net/npm/panel-api/+esm';
+
+  panel.open("", "Hello", { width: 360, height: 220 })
+       .setHTML("&lt;p&gt;Hello, world.&lt;/p&gt;");
+&lt;/script&gt;</code></pre>
+
+    <h2 class="h5 mt-5">2. Add content</h2>
+    <p>You can pass HTML strings or DOM nodes. Nodes are preferred — they avoid the innerHTML trust problem.</p>
+    <pre class="bg-body-tertiary p-3 rounded"><code>const settings = document.createElement("div");
+settings.innerHTML = `&lt;h2 class="h5"&gt;Settings&lt;/h2&gt;...`;
+
+const handle = panel.open("", "Settings", { width: 320, height: 280 });
+handle.setContent(settings);</code></pre>
+
+    <h2 class="h5 mt-5">3. React to events</h2>
+    <pre class="bg-body-tertiary p-3 rounded"><code>handle.element.addEventListener("beforepanelclose", event =&gt; {
+  if (hasUnsavedChanges) event.preventDefault();
+});
+
+handle.element.addEventListener("panelmove", event =&gt; {
+  console.log("moved to", event.detail);
+});</code></pre>
+
+    <h2 class="h5 mt-5">Live example</h2>
+    <p class="text-secondary">Click to open a real panel on this page.</p>
+    <div class="d-flex gap-2 mb-4">
+      <button id="openHello"    class="btn btn-primary"><i class="bi bi-plus-lg"></i> Open Hello</button>
+      <button id="openSettings" class="btn btn-secondary">Open Settings</button>
+      <button id="closeAll"     class="btn btn-outline-secondary">Close all</button>
+    </div>
+  </main>
+
+  <script type="module">
+    // ---- this is the entire integration ----
+    import panel from 'https://cdn.jsdelivr.net/npm/panel-api/+esm';
+
+    document.getElementById("openHello").addEventListener("click", () => {
+      panel.open("", "Hello", { width: 360, height: 220 })
+           .setHTML("<p>Hello, world.</p><p class='text-secondary small'>Drag, resize, minimize, close.</p>");
+    });
+
+    document.getElementById("openSettings").addEventListener("click", () => {
+      const settings = document.createElement("div");
+      settings.innerHTML = `
+        <h2 class="h5">Settings</h2>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="darkmode" checked>
+          <label class="form-check-label" for="darkmode">Dark mode</label>
+        </div>
+        <label class="form-label mt-3">Accent color</label>
+        <input type="color" class="form-control form-control-color" value="#7aa2ff">
+      `;
+      const handle = panel.open("", "Settings", { width: 320, height: 280 });
+      handle.setContent(settings);
+    });
+
+    document.getElementById("closeAll").addEventListener("click", () => panel.closeAll());
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

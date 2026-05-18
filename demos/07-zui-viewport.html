@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · ZUI viewport</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <style>
+    /*
+      Layout: the viewport is a fixed full-screen container; inside lives the
+      zooming surface. The panel layer is a sibling (sits above the surface,
+      below the controls). Panels are not scaled with the world.
+    */
+    body { margin: 0; overflow: hidden; }
+    .app-viewport {
+      position: fixed; inset: 0;
+      overflow: hidden;
+      container-type: size;
+      touch-action: none;
+      isolation: isolate;
+      background:
+        linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px),
+        #0c0f24;
+      background-size: 56px 56px, 56px 56px, auto;
+    }
+    .app-surface {
+      position: absolute;
+      left: 0; top: 0;
+      width: 100cqw; min-width: 1400px;
+      height: 100cqh; min-height: 1000px;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+    .demo-card {
+      position: absolute;
+      width: 480px;
+      padding: 22px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.1);
+      backdrop-filter: blur(6px);
+    }
+    .demo-card.a { left: 120px; top: 120px; }
+    .demo-card.b { left: 720px; top: 380px; }
+    .demo-card.c { left: 240px; top: 600px; }
+    .controls {
+      position: fixed;
+      top: 16px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+    }
+  </style>
+</head>
+<body>
+  <main id="root" class="app-viewport">
+    <div id="surface" class="app-surface">
+      <article class="demo-card a">
+        <h2 class="h4 mb-2">A world surface</h2>
+        <p class="text-secondary mb-0">Drag the background to pan. Use the mouse wheel to zoom.</p>
+      </article>
+      <article class="demo-card b">
+        <h2 class="h5 mb-2">Things in the world</h2>
+        <p class="text-secondary mb-0">These cards live <em>inside</em> the zooming surface.</p>
+      </article>
+      <article class="demo-card c">
+        <h2 class="h5 mb-2">Panels live above</h2>
+        <p class="text-secondary mb-0">Open the inspector panel — it stays the same size as you zoom.</p>
+      </article>
+    </div>
+  </main>
+
+  <div class="controls btn-group">
+    <a href="./index.html" class="btn btn-dark btn-sm"><i class="bi bi-chevron-left"></i></a>
+    <button id="zoomIn"  class="btn btn-dark btn-sm" title="Zoom in"><i class="bi bi-zoom-in"></i></button>
+    <button id="zoomOut" class="btn btn-dark btn-sm" title="Zoom out"><i class="bi bi-zoom-out"></i></button>
+    <button id="reset"   class="btn btn-dark btn-sm" title="Reset"><i class="bi bi-aspect-ratio"></i></button>
+    <button id="openInspector" class="btn btn-primary btn-sm">Inspector</button>
+  </div>
+
+  <script type="module">
+    import panel from "../index.js";
+    import { PanelViewport, wireInteractions } from "../zui.js";
+
+    // Build a viewport from our pre-existing root/surface markup.
+    const viewport = new PanelViewport({
+      root: document.getElementById("root"),
+      surface: document.getElementById("surface")
+    });
+    wireInteractions(viewport);
+    panel.attachViewport(viewport);
+
+    document.getElementById("zoomIn") .addEventListener("click", () => viewport.setZoom(viewport.zoom * 1.2));
+    document.getElementById("zoomOut").addEventListener("click", () => viewport.setZoom(viewport.zoom / 1.2));
+    document.getElementById("reset")  .addEventListener("click", () => viewport.reset());
+
+    function openInspector() {
+      const handle = panel.open("", "Inspector", { width: 320, height: 260, left: 24, top: 80 });
+      handle.setHTML(`
+        <p>Try zooming in/out with the wheel.</p>
+        <p class="text-secondary small">The world surface zooms; this panel does not.</p>
+      `);
+    }
+    document.getElementById("openInspector").addEventListener("click", openInspector);
+    openInspector();
+  </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<!--
+  Panel API · Tutorial 03
+  Wrap an existing webpage in a ZUI surface and float panels on top.
+
+  This is the simplest path to "I have a regular page and I want zoom + pan +
+  panels". You don't have to restructure your HTML. framePage() takes
+  whatever is in <body> at call time and moves it into a transformed surface
+  for you.
+
+  The page's aspect ratio (xy ratio) is preserved exactly because we apply a
+  single uniform scale to the surface, not separate scaleX / scaleY.
+-->
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Tutorial 03 (ZUI framing a page)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+  <!--
+    This page has zero ZUI markup. Notice there is no wrapper, no viewport
+    element, no surface element. We rely on framePage() to take what's here
+    and frame it.
+  -->
+
+  <main class="container py-5">
+    <a href="../demos/index.html" class="text-decoration-none small" style="position: fixed; top: 8px; left: 12px; z-index: 50;">
+      <i class="bi bi-chevron-left"></i> back
+    </a>
+
+    <h1 class="display-5">Tutorial 03 · Frame an existing page</h1>
+    <p class="lead text-secondary">
+      One function call wraps this entire page in a zoom/pan surface and gives you a
+      Panel API viewport to attach panels to. xy ratio preserved.
+    </p>
+
+    <div class="d-flex gap-2 my-3">
+      <button id="openPanel" class="btn btn-primary"><i class="bi bi-window"></i> Open a floating panel</button>
+      <button id="resetZoom" class="btn btn-outline-secondary"><i class="bi bi-aspect-ratio"></i> Reset zoom</button>
+    </div>
+
+    <h2 class="h5 mt-5">The minimal recipe</h2>
+    <pre class="bg-body-tertiary p-3 rounded"><code>&lt;script type="module"&gt;
+  import panel from 'https://cdn.jsdelivr.net/npm/panel-api/+esm';
+  import { framePage } from 'https://cdn.jsdelivr.net/npm/panel-api/zui/+esm';
+
+  const viewport = framePage();   // wraps document.body content
+  panel.attachViewport(viewport); // panels now know about ZUI
+
+  panel.open("", "Hello", { width: 320 }).setHTML("Hello!");
+&lt;/script&gt;</code></pre>
+
+    <h2 class="h5 mt-5">What framePage() does</h2>
+    <ol class="text-secondary">
+      <li>Moves your current body content into a new <code>.panel-api-surface</code> element.</li>
+      <li>Puts that surface inside a fixed-size, clipped <code>.panel-api-viewport</code>.</li>
+      <li>Injects minimal styles to make the layout work.</li>
+      <li>Wires default pan/zoom interactions (override with <code>{ interactions: false }</code>).</li>
+      <li>Returns a <code>PanelViewport</code> you can pass to <code>panel.attachViewport()</code>.</li>
+    </ol>
+
+    <div class="row g-3 mt-4">
+      <div class="col-md-4"><div class="card"><div class="card-body">
+        <h3 class="h6">No restructuring</h3>
+        <p class="text-secondary small mb-0">Drop in two imports and a call. Existing layout, scripts, and event handlers still work.</p>
+      </div></div></div>
+      <div class="col-md-4"><div class="card"><div class="card-body">
+        <h3 class="h6">Preserves xy ratio</h3>
+        <p class="text-secondary small mb-0">A single uniform scale applies to both axes — content never looks squashed.</p>
+      </div></div></div>
+      <div class="col-md-4"><div class="card"><div class="card-body">
+        <h3 class="h6">Panels stay crisp</h3>
+        <p class="text-secondary small mb-0">Panels float in a sibling layer that doesn't transform with the world.</p>
+      </div></div></div>
+    </div>
+
+    <h2 class="h5 mt-5">Try it</h2>
+    <ul class="text-secondary">
+      <li>Drag the background to pan the entire page content.</li>
+      <li>Use the scroll wheel to zoom in and out.</li>
+      <li>Open a panel — it stays at fixed screen size.</li>
+    </ul>
+  </main>
+
+  <script type="module">
+    // ---- the entire integration ----
+    import panel from 'https://cdn.jsdelivr.net/npm/panel-api/+esm';
+    import { framePage } from 'https://cdn.jsdelivr.net/npm/panel-api/zui/+esm';
+
+    const viewport = framePage();
+    panel.attachViewport(viewport);
+
+    function openPanel() {
+      panel.open("", "Floating note", { width: 320, height: 200, left: 60, top: 80 }).setHTML(`
+        <p>I'm a Panel API panel. The page behind me zooms and pans;
+           I stay the same size on screen.</p>
+        <p class="text-secondary small">Press Esc to close.</p>
+      `);
+    }
+
+    document.getElementById("openPanel").addEventListener("click", openPanel);
+    document.getElementById("resetZoom").addEventListener("click", () => viewport.reset());
+
+    openPanel();
+  </script>
+</body>
+</html>

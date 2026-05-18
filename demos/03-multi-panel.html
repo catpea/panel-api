@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Multiple panels</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+  <main class="container py-5">
+    <a href="./index.html" class="text-decoration-none small"><i class="bi bi-chevron-left"></i> back</a>
+    <h1 class="display-6 mb-3 mt-3">Multiple panels</h1>
+    <p class="text-secondary">
+      Open several panels. Click any to bring it to front. The <code>stackable</code> plugin manages z-order.
+    </p>
+
+    <div class="d-flex gap-2 my-4">
+      <button id="openOne" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Open another</button>
+      <button id="cascade" class="btn btn-secondary">Cascade 5</button>
+      <button id="tile"    class="btn btn-secondary">Tile</button>
+      <button id="closeAll" class="btn btn-outline-secondary">Close all</button>
+    </div>
+
+    <p class="text-secondary small mb-0">Open panels: <span id="count">0</span></p>
+  </main>
+
+  <script type="module">
+    import panel from "../index.js";
+
+    let n = 0;
+    const colors = ["#7aa2ff", "#ffb27a", "#a7e3ff", "#c5ffa7", "#ff7ad7", "#ffd07a"];
+
+    function open(left, top) {
+      n += 1;
+      const handle = panel.open("", `Panel ${n}`, {
+        width: 280,
+        height: 200,
+        left, top
+      });
+      handle.element.style.setProperty("--panel-caption-background", colors[(n - 1) % colors.length] + "33");
+      handle.setHTML(`
+        <p>This is panel #${n}.</p>
+        <p class="text-secondary small">Drag, resize, minimize, close, click to focus.</p>
+      `);
+      handle.element.addEventListener("panelclose", refresh);
+      handle.element.addEventListener("panelopen", refresh);
+      refresh();
+    }
+
+    function refresh() {
+      document.getElementById("count").textContent = panel.getPanels().length;
+    }
+
+    document.getElementById("openOne").addEventListener("click", () => open(100 + n * 30, 120 + n * 30));
+    document.getElementById("cascade").addEventListener("click", () => {
+      for (let i = 0; i < 5; i++) open(80 + i * 32, 80 + i * 28);
+    });
+    document.getElementById("tile").addEventListener("click", () => {
+      panel.closeAll();
+      const cols = 3;
+      const w = 260, h = 180, gap = 16;
+      const startX = 60, startY = 100;
+      for (let i = 0; i < 6; i++) {
+        const col = i % cols, row = Math.floor(i / cols);
+        open(startX + col * (w + gap), startY + row * (h + gap));
+      }
+    });
+    document.getElementById("closeAll").addEventListener("click", () => panel.closeAll());
+
+    // Start with three.
+    open(60, 100);
+    open(360, 140);
+    open(660, 180);
+  </script>
+</body>
+</html>

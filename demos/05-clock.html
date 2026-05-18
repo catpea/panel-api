@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Clock</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <style>
+    /* Clock content scales with the panel via --panel-cqw container query unit. */
+    .clock-card {
+      height: 100%;
+      display: grid;
+      align-content: center;
+      gap: 12px;
+      text-align: center;
+    }
+    .clock-face {
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(28px, calc(18 * var(--panel-cqw, 1px)), 78px);
+      letter-spacing: -.05em;
+      font-weight: 800;
+      line-height: 0.95;
+    }
+    .clock-date {
+      color: var(--bs-secondary-color);
+      font-size: clamp(12px, calc(4 * var(--panel-cqw, 1px)), 18px);
+    }
+  </style>
+</head>
+<body>
+  <main class="container py-5">
+    <a href="./index.html" class="text-decoration-none small"><i class="bi bi-chevron-left"></i> back</a>
+    <h1 class="display-6 mb-3 mt-3">Live clock</h1>
+    <p class="text-secondary">
+      A panel that runs an interval. We use <code>panelclose</code> to clean up.
+      The clock face uses <code>--panel-cqw</code> (1% of panel width as px) so the typography scales with resize.
+    </p>
+    <button id="openClock" class="btn btn-primary"><i class="bi bi-clock-history"></i> Open clock</button>
+  </main>
+
+  <script type="module">
+    import panel from "../index.js";
+
+    function openClock() {
+      const handle = panel.open("", "Clock", { width: 380, height: 240, left: 80, top: 160, radius: 24 });
+
+      const card = document.createElement("div");
+      card.className = "clock-card";
+      card.innerHTML = `
+        <div class="clock-face" data-time>--:--:--</div>
+        <div class="clock-date" data-date></div>
+      `;
+      handle.setContent(card);
+
+      const tick = () => {
+        const now = new Date();
+        card.querySelector("[data-time]").textContent =
+          now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        card.querySelector("[data-date]").textContent =
+          now.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+      };
+      tick();
+      const interval = setInterval(tick, 1000);
+      handle.element.addEventListener("panelclose", () => clearInterval(interval));
+      return handle;
+    }
+
+    document.getElementById("openClock").addEventListener("click", openClock);
+    openClock();
+  </script>
+</body>
+</html>
