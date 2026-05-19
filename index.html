@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API — floating panels for the web</title>
+  <meta name="description" content="Floating, draggable, resizable panels for the web. Plain ESM, no build step, no dependencies.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <style>
+    :root { --accent: #7c6cfc; }
+
+    body { background: #0d0d14; }
+
+    .hero {
+      padding: 5rem 0 3.5rem;
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, #1a1535 0%, transparent 70%);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+      border-radius: 2rem;
+      padding: .25rem .75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      font-weight: 800;
+      letter-spacing: -.02em;
+      line-height: 1.15;
+    }
+
+    .hero h1 span { color: var(--accent); }
+
+    .pill-group { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
+
+    .pill {
+      font-size: .78rem;
+      font-weight: 500;
+      color: #aaa;
+      background: #1a1a28;
+      border: 1px solid #2a2a40;
+      border-radius: 2rem;
+      padding: .2rem .7rem;
+    }
+
+    .install-block {
+      display: inline-flex;
+      align-items: center;
+      gap: .75rem;
+      background: #13131f;
+      border: 1px solid #2a2a40;
+      border-radius: .6rem;
+      padding: .6rem 1rem;
+      margin-top: 1.75rem;
+      font-family: monospace;
+      font-size: .9rem;
+      color: #ccc;
+    }
+
+    .install-block .copy-btn {
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      transition: color .15s;
+    }
+    .install-block .copy-btn:hover { color: #fff; }
+
+    .section-label {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 1rem;
+    }
+
+    .demo-card {
+      display: block;
+      text-decoration: none;
+      background: #13131f;
+      border: 1px solid #1e1e30;
+      border-radius: .75rem;
+      padding: 1.1rem 1.25rem;
+      transition: border-color .15s, background .15s;
+      height: 100%;
+    }
+
+    .demo-card:hover {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 6%, #13131f);
+    }
+
+    .demo-card .card-num {
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: .35rem;
+    }
+
+    .demo-card h3 {
+      font-size: .95rem;
+      font-weight: 600;
+      color: #e8e8f0;
+      margin: 0 0 .3rem;
+    }
+
+    .demo-card p {
+      font-size: .82rem;
+      color: #666;
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .doc-card {
+      display: block;
+      text-decoration: none;
+      background: #13131f;
+      border: 1px solid #1e1e30;
+      border-radius: .75rem;
+      padding: 1rem 1.25rem;
+      transition: border-color .15s;
+      height: 100%;
+    }
+
+    .doc-card:hover { border-color: #3a3a58; }
+
+    .doc-card h3 {
+      font-size: .9rem;
+      font-weight: 600;
+      color: #bbb;
+      margin: 0;
+    }
+
+    .doc-card i { color: #555; }
+
+    .live-hint {
+      font-size: .8rem;
+      color: #555;
+      margin-top: .5rem;
+    }
+
+    footer {
+      border-top: 1px solid #1a1a28;
+      padding: 2rem 0;
+      font-size: .82rem;
+      color: #444;
+    }
+
+    footer a { color: #666; text-decoration: none; }
+    footer a:hover { color: #aaa; }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="row align-items-center g-5">
+
+        <div class="col-lg-6">
+          <div class="hero-badge"><i class="bi bi-box"></i> npm install panel-api</div>
+          <h1>Floating <span>panels</span><br>for the web</h1>
+          <p class="lead text-secondary mt-3" style="max-width:42ch;">
+            Draggable, resizable, stackable panels as a plain ESM library.
+            No build step. No dependencies. Optional ZUI integration.
+          </p>
+
+          <div class="pill-group">
+            <span class="pill"><i class="bi bi-arrows-move"></i> drag &amp; resize</span>
+            <span class="pill"><i class="bi bi-layers"></i> z-stacking</span>
+            <span class="pill"><i class="bi bi-pin-angle"></i> pin to world</span>
+            <span class="pill"><i class="bi bi-puzzle"></i> plugin system</span>
+            <span class="pill"><i class="bi bi-filetype-js"></i> plain ESM</span>
+            <span class="pill"><i class="bi bi-feather"></i> zero deps</span>
+          </div>
+
+          <div class="install-block">
+            <code id="install-cmd">npm install panel-api</code>
+            <button class="copy-btn" title="Copy" onclick="copyInstall(this)">
+              <i class="bi bi-clipboard"></i>
+            </button>
+          </div>
+
+          <div class="mt-4 d-flex gap-2 flex-wrap">
+            <a href="./demos/" class="btn btn-primary px-4">
+              <i class="bi bi-play-fill"></i> Browse demos
+            </a>
+            <a href="https://github.com/catpea/panel-api" class="btn btn-outline-secondary px-4">
+              <i class="bi bi-github"></i> GitHub
+            </a>
+            <a href="https://www.npmjs.com/package/panel-api" class="btn btn-outline-secondary px-4">
+              <i class="bi bi-box"></i> npm
+            </a>
+          </div>
+        </div>
+
+        <!-- Live preview panel -->
+        <div class="col-lg-6 d-flex flex-column align-items-center">
+          <div id="preview-host" style="position:relative; width:100%; height:340px; background:#0d0d14; border:1px solid #1e1e30; border-radius:1rem; overflow:hidden;"></div>
+          <p class="live-hint"><i class="bi bi-hand-index"></i> Live — drag it, resize it, close it.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick-start snippet -->
+  <section class="py-5" style="background:#0b0b12; border-top:1px solid #1a1a28;">
+    <div class="container">
+      <p class="section-label">Quick start</p>
+      <div class="row g-4 align-items-start">
+        <div class="col-md-6">
+          <pre class="rounded p-4 m-0" style="background:#13131f; border:1px solid #1e1e30; font-size:.85rem; color:#c9d1d9; overflow-x:auto;"><code><span style="color:#7c6cfc">import</span> panel <span style="color:#7c6cfc">from</span> <span style="color:#9ecbff">"panel-api"</span>;
+
+<span style="color:#6a8759">// open a panel</span>
+<span style="color:#7c6cfc">const</span> h = panel.<span style="color:#ffc66d">open</span>(<span style="color:#9ecbff">""</span>, <span style="color:#9ecbff">"Hello"</span>, {
+  width: <span style="color:#b5cea8">360</span>, height: <span style="color:#b5cea8">200</span>
+});
+
+h.<span style="color:#ffc66d">setHTML</span>(<span style="color:#9ecbff">"&lt;p&gt;Hello world!&lt;/p&gt;"</span>);</code></pre>
+        </div>
+        <div class="col-md-6">
+          <p class="text-secondary" style="font-size:.9rem; line-height:1.7;">
+            Import once, call <code>panel.open()</code>. The returned handle lets you set content,
+            move, resize, minimize, and close the panel programmatically.
+            Every behaviour — dragging, stacking, the close button — is a plugin you can
+            replace or extend.
+          </p>
+          <a href="./docs/api.md" class="btn btn-sm btn-outline-secondary mt-1">
+            <i class="bi bi-book"></i> Full API reference
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core demos -->
+  <section class="py-5">
+    <div class="container">
+      <p class="section-label">Core demos</p>
+      <div class="row g-3">
+        <div class="col-sm-6 col-lg-4">
+          <a class="demo-card" href="./demos/01-hello-panel.html">
+            <div class="card-num">01</div>
+            <h3>Hello panel</h3>
+            <p>The minimum viable example — one panel, a handful of lines.</p>
+          </a>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+          <a class="demo-card" href="./demos/02-styling.html">
+            <div class="card-num">02</div>
+            <h3>Styling</h3>
+            <p>Theming via CSS variables and <code>::part()</code> selectors.</p>
+          </a>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+          <a class="demo-card" href="./demos/03-multi-panel.html">
+            <div class="card-num">03</div>
+            <h3>Multiple panels</h3>
+            <p>Stacking, focus management, dragging, and resizing side by side.</p>
+          </a>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+          <a class="demo-card" href="./demos/04-toolbox.html">
+            <div class="card-num">04</div>
+            <h3>Toolbox</h3>
+            <p>Borderless, vertical panel of icon tools — no title bar.</p>
+          </a>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+          <a class="demo-card" href="./demos/05-clock.html">
+            <div class="card-num">05</div>
+            <h3>Live clock</h3>
+            <p>A panel that ticks over time and cleans up after itself.</p>
+          </a>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+          <a class="demo-card" href="./demos/06-declarative.html">
+            <div class="card-num">06</div>
+            <h3>Declarative</h3>
+            <p><code>paneltarget</code> / <code>&lt;section panel&gt;</code> HTML attributes.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ZUI demos -->
+  <section class="py-5" style="background:#0b0b12; border-top:1px solid #1a1a28;">
+    <div class="container">
+      <p class="section-label">ZUI — zooming user interface</p>
+      <div class="row g-3">
+        <div class="col-sm-6 col-lg-4">
+          <a class="demo-card" href="./demos/07-zui-viewport.html">
+            <div class="card-num">07</div>
+            <h3>ZUI viewport</h3>
+            <p>Panel layer alongside a zooming and panning world surface.</p>
+          </a>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+          <a class="demo-card" href="./demos/08-zui-pinned-panels.html">
+            <div class="card-num">08</div>
+            <h3>Pinned panels</h3>
+            <p>Panels that follow ZUI world coordinates as you pan and zoom.</p>
+          </a>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+          <a class="demo-card" href="./demos/09-zui-framing-page.html">
+            <div class="card-num">09</div>
+            <h3>Framing a page</h3>
+            <p><code>framePage()</code> wraps any webpage so panels float on top.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tutorials -->
+  <section class="py-5">
+    <div class="container">
+      <p class="section-label">Tutorials — CDN / no bundler</p>
+      <div class="row g-3">
+        <div class="col-sm-6 col-lg-4">
+          <a class="demo-card" href="./tutorials/01-cdn-no-zui.html">
+            <div class="card-num">T1</div>
+            <h3>Panels only</h3>
+            <p>Add a floating panel to any page with a single script tag.</p>
+          </a>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+          <a class="demo-card" href="./tutorials/02-cdn-with-zui.html">
+            <div class="card-num">T2</div>
+            <h3>With ZUI</h3>
+            <p>Panels alongside a zoomable world — straight from the CDN.</p>
+          </a>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+          <a class="demo-card" href="./tutorials/03-cdn-zui-framing.html">
+            <div class="card-num">T3</div>
+            <h3>ZUI framing</h3>
+            <p>Wrap existing page content in a ZUI surface with one call.</p>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Docs -->
+  <section class="py-5" style="background:#0b0b12; border-top:1px solid #1a1a28; border-bottom:1px solid #1a1a28;">
+    <div class="container">
+      <p class="section-label">Documentation</p>
+      <div class="row g-3">
+        <div class="col-6 col-md-3">
+          <a class="doc-card" href="./docs/api.md">
+            <h3><i class="bi bi-book me-2"></i>API</h3>
+          </a>
+        </div>
+        <div class="col-6 col-md-3">
+          <a class="doc-card" href="./docs/plugins.md">
+            <h3><i class="bi bi-plug me-2"></i>Plugins</h3>
+          </a>
+        </div>
+        <div class="col-6 col-md-3">
+          <a class="doc-card" href="./docs/zui.md">
+            <h3><i class="bi bi-aspect-ratio me-2"></i>ZUI</h3>
+          </a>
+        </div>
+        <div class="col-6 col-md-3">
+          <a class="doc-card" href="./docs/styling.md">
+            <h3><i class="bi bi-palette2 me-2"></i>Styling</h3>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <span>Panel API v1.0.4 &mdash; MIT license</span>
+      <span class="d-flex gap-3">
+        <a href="https://github.com/catpea/panel-api"><i class="bi bi-github"></i> GitHub</a>
+        <a href="https://www.npmjs.com/package/panel-api"><i class="bi bi-box"></i> npm</a>
+        <a href="https://github.com/catpea/panel-api/issues"><i class="bi bi-bug"></i> Issues</a>
+      </span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import panel from "./index.js";
+
+    // Mount a live panel inside the hero preview box, not the page body.
+    const host = document.getElementById("preview-host");
+    const layer = document.createElement("div");
+    layer.style.cssText = "position:absolute;inset:0;overflow:hidden;";
+    host.appendChild(layer);
+    panel.setLayer(layer);
+
+    const h = panel.open("", "Panel API — live preview", {
+      width: 300, height: 190, left: 40, top: 50,
+      plugins: ["focusable", "stackable", "draggable", "resizable", "rounded", "closable", "miniaturizable", "escapable"],
+    });
+    h.setHTML(`
+      <p style="margin:0 0 .5rem;">Drag the title bar. Resize from the corner. Try the buttons.</p>
+      <code style="font-size:.78rem;color:#9ecbff;">panel.open("", "Hello", { width: 300 })</code>
+    `);
+  </script>
+
+  <script>
+    function copyInstall(btn) {
+      navigator.clipboard.writeText("npm install panel-api").then(() => {
+        btn.innerHTML = '<i class="bi bi-check2"></i>';
+        setTimeout(() => btn.innerHTML = '<i class="bi bi-clipboard"></i>', 1800);
+      });
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
