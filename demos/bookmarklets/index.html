@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Bookmarklets</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+  <main class="container py-5" style="max-width: 700px">
+    <a href="../index.html" class="text-decoration-none small"><i class="bi bi-chevron-left"></i> back</a>
+    <h1 class="display-6 mt-3 mb-2">Bookmarklets</h1>
+    <p class="text-secondary mb-4">
+      One-click tools that load panel-api from CDN and inject powerful developer
+      panels into any webpage. Each page shows the full source and a drag-to-bookmarks
+      link.
+    </p>
+    <div class="list-group">
+      <a href="01-zui-debugger.html" class="list-group-item list-group-item-action">
+        <div class="d-flex align-items-center gap-3">
+          <i class="bi bi-rulers fs-4 text-primary"></i>
+          <div>
+            <div class="fw-semibold">ZUI Geometry Debugger</div>
+            <div class="text-secondary small">Wraps any page in a zoom/pan surface. Live cursor coordinates (screen + world), viewport state panel, and a geometry inspector that highlights hovered elements with bounding-box measurements.</div>
+          </div>
+        </div>
+      </a>
+      <a href="02-image-collector.html" class="list-group-item list-group-item-action">
+        <div class="d-flex align-items-center gap-3">
+          <i class="bi bi-images fs-4 text-success"></i>
+          <div>
+            <div class="fw-semibold">Image Collector</div>
+            <div class="text-secondary small">Drag any image on a page onto the collection panel to harvest thumbnails and source URLs. One-click copy of all collected URLs.</div>
+          </div>
+        </div>
+      </a>
+      <a href="03-text-extractor.html" class="list-group-item list-group-item-action">
+        <div class="d-flex align-items-center gap-3">
+          <i class="bi bi-file-text fs-4 text-warning"></i>
+          <div>
+            <div class="fw-semibold">Text Extractor</div>
+            <div class="text-secondary small">Click any element to capture its text, tag, and CSS selector. Accumulates entries in a panel. Export as JSON. Useful for scraping and refactoring workflows.</div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </main>
+</body>
+</html>

@@ -13,6 +13,7 @@ export default function resizable(handle, options, signal) {
   grip.setAttribute("aria-hidden", "true");
   panel.append(grip);
 
+
   // Remove the grip if the plugin is uninstalled mid-life (e.g., for a future
   // hot-swap API). The abort signal handles event cleanup; this removes DOM.
   signal.addEventListener("abort", () => grip.remove(), { once: true });
@@ -40,9 +41,12 @@ export default function resizable(handle, options, signal) {
 
     const onMove = move => {
       const nextW = Math.max(minW, Math.min(maxW, start.width + move.clientX - start.x));
-      const nextH = Math.max(minH, Math.min(maxH, start.height + move.clientY - start.y));
       panel.style.width = `${nextW}px`;
-      panel.style.height = `${nextH}px`;
+      let nextH = start.height;
+      if (!("autoheight" in panel.dataset)) {
+        nextH = Math.max(minH, Math.min(maxH, start.height + move.clientY - start.y));
+        panel.style.height = `${nextH}px`;
+      }
       updateCQU(panel.bodyElement);
       dispatchPanelEvent(panel, PANEL_EVENTS.RESIZE, { width: nextW, height: nextH });
     };

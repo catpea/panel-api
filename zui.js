@@ -10,3 +10,5 @@
 export { PanelViewport, VIEWPORT_CHANGE_EVENT } from "./src/zui/viewport.js";
 export { wireInteractions } from "./src/zui/interactions.js";
 export { framePage, attachZUI } from "./src/zui/frame-page.js";
+export { wireZuiPointerEvents } from "./src/zui/zui-pointer-events.js";
+export { createViewportLock } from "./src/zui/viewport-lock.js";

@@ -7,15 +7,26 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
   <style>
+    /* Fixed 2-column grid — panel width auto-fits via shrink-to-fit */
     .toolbox-grid {
       display: grid;
       grid-template-columns: repeat(2, 48px);
-      grid-template-rows: repeat(6, 48px);
       gap: 10px;
     }
+
+    /* Flex-wrap grid — reflows when panel width changes */
+    .toolbox-flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
     .tool-button {
       display: grid;
       place-items: center;
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
       border: 1px solid rgba(255,255,255,.10);
       border-radius: 14px;
       background: rgba(255,255,255,.06);
@@ -29,56 +40,222 @@
       outline: 2px solid rgba(122,162,255,.42);
       outline-offset: 2px;
     }
+    .tool-button[data-selected="true"] {
+      background: rgba(122,162,255,.28);
+      color: white;
+      border-color: rgba(122,162,255,.5);
+    }
   </style>
 </head>
 <body>
   <main class="container py-5">
     <a href="./index.html" class="text-decoration-none small"><i class="bi bi-chevron-left"></i> back</a>
     <h1 class="display-6 mb-3 mt-3">Toolbox</h1>
-    <p class="text-secondary">A borderless, vertical panel for a grid of tools. The panel has <code>role="toolbar"</code> for accessibility.</p>
-    <button id="openToolbox" class="btn btn-primary"><i class="bi bi-tools"></i> Open toolbox</button>
+
+    <div class="alert alert-secondary small mb-3">
+      <strong>autoheight plugin</strong> — uses <code>ResizeObserver</code> on the body
+      to keep <code>panel.style.height</code> in sync with content. No <code>!important</code>
+      CSS hacks. Works alongside <code>resizable</code>: the <code>resizable</code> plugin skips
+      height writes when <code>[data-autoheight]</code> is present, so the user can still
+      resize width freely and content reflow is tracked automatically.
+      <br><br>
+      <strong>Width</strong>: panels A and B set no explicit width — the browser uses the
+      shrink-to-fit algorithm on the absolutely-positioned panel and arrives at exactly
+      <code>grid-content + body-padding × 2</code>. Variant C sets an explicit initial width
+      (3 columns) so resize has a meaningful starting point; <code>minWidth</code> enforces
+      a 2-column floor.
+    </div>
+
+    <ul class="text-secondary small mb-4">
+      <li><strong>A — Compact caption</strong>: <code>toolbar-caption</code> + <code>titled:false</code>. Width and height are content-driven.</li>
+      <li><strong>B — Captionless</strong>: <code>captionless</code> + <code>body-draggable</code>. No chrome. Purely content-driven.</li>
+      <li><strong>C — Flex-wrap resizable</strong>: tools reflow when the panel is resized. <code>autoheight</code> tracks height automatically.</li>
+    </ul>
+    <p class="text-secondary small mb-4">Click a tool to select it. Click again to deselect.</p>
+
+    <div class="d-flex gap-3 flex-wrap">
+      <button id="openA" class="btn btn-primary btn-sm"><i class="bi bi-tools"></i> A — Compact caption</button>
+      <button id="openB" class="btn btn-outline-secondary btn-sm"><i class="bi bi-grip-vertical"></i> B — Captionless</button>
+      <button id="openC" class="btn btn-outline-secondary btn-sm"><i class="bi bi-grid"></i> C — Flex-wrap</button>
+    </div>
+
+    <hr class="my-4">
+    <h2 class="h6 text-secondary mb-2">Code reference</h2>
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <p class="small text-secondary mb-1"><strong>colsWidth helper (variant C only)</strong></p>
+        <pre class="bg-dark border rounded p-3 small text-light"><code>// CSS constants — match --panel-body-padding
+// and the grid's cell/gap values.
+const CELL = 48, GAP = 10, PAD = 14;
+function colsWidth(n) {
+  return n * CELL + (n - 1) * GAP + PAD * 2;
+}
+// colsWidth(2) → 134
+// colsWidth(3) → 192</code></pre>
+      </div>
+      <div class="col-lg-4">
+        <p class="small text-secondary mb-1"><strong>A + B — content-driven sizing</strong></p>
+        <pre class="bg-dark border rounded p-3 small text-light"><code>// A — compact caption, no explicit size
+panel.open("", "", {
+  minWidth: "auto", radius: 22,
+  plugins: ["focusable","stackable","draggable",
+    "rounded","borderless",
+    "titled","toolbar-caption",
+    "autoheight","escapable"],
+  titled: false
+});
+
+// B — captionless + body-draggable
+panel.open("", "", {
+  minWidth: "auto", radius: 22,
+  plugins: ["focusable","stackable",
+    "rounded","borderless",
+    "captionless","autoheight",
+    "body-draggable"]
+});</code></pre>
+      </div>
+      <div class="col-lg-4">
+        <p class="small text-secondary mb-1"><strong>C — flex-wrap resizable</strong></p>
+        <pre class="bg-dark border rounded p-3 small text-light"><code>// C — flex-wrap, height auto-tracks
+panel.open("", "", {
+  width: colsWidth(3),   // 192px initial
+  minWidth: colsWidth(2),// 134px floor
+  radius: 22,
+  plugins: ["focusable","stackable",
+    "resizable",
+    "rounded","borderless",
+    "captionless","autoheight",
+    "body-draggable"]
+});
+// Resize width — tools reflow,
+// height stays content-driven.</code></pre>
+      </div>
+    </div>
   </main>
 
   <script type="module">
     import panel from "../index.js";
 
-    function openToolbox() {
-      const handle = panel.open("", "Toolbox", {
-        width: 140,
-        height: 400,
-        left: 40,
-        top: 80,
-        radius: 22,
-        role: "toolbar",
-        plugins: ["focusable", "stackable", "draggable", "closable", "miniaturizable", "pinnable", "rounded", "borderless", "titled", "escapable"]
-      });
+    // Only used for variant C: sets initial width and minWidth.
+    // Constants match --panel-body-padding (14px) and the grid's cell/gap.
+    const CELL = 48, GAP = 10, PAD = 14;
+    function colsWidth(n) { return n * CELL + (n - 1) * GAP + PAD * 2; }
 
+    const TOOLS = [
+      ["bi-cursor",      "Select"],
+      ["bi-bounding-box","Frame"],
+      ["bi-vector-pen",  "Pen"],
+      ["bi-textarea-t",  "Text"],
+      ["bi-image",       "Image"],
+      ["bi-grid-3x3-gap","Grid"],
+      ["bi-bezier2",     "Path"],
+      ["bi-palette",     "Style"],
+      ["bi-link-45deg",  "Link"],
+      ["bi-code-slash",  "Code"],
+      ["bi-magnet",      "Snap"],
+      ["bi-gear",        "Settings"]
+    ];
+
+    let selectedTool = null;
+
+    function makeButton(icon, label, onSelect) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "tool-button";
+      button.title = label;
+      button.setAttribute("aria-label", label);
+      button.innerHTML = `<i class="bi ${icon}"></i>`;
+      button.addEventListener("click", () => {
+        const isSelected = button.dataset.selected === "true";
+        if (selectedTool) selectedTool.dataset.selected = "false";
+        if (isSelected) {
+          selectedTool = null;
+        } else {
+          button.dataset.selected = "true";
+          selectedTool = button;
+          onSelect?.(label);
+        }
+      });
+      return button;
+    }
+
+    function makeGrid(containerClass, onSelect) {
       const grid = document.createElement("div");
-      grid.className = "toolbox-grid";
-      const tools = [
-        ["bi-cursor", "Select"], ["bi-bounding-box", "Frame"],
-        ["bi-vector-pen", "Pen"], ["bi-textarea-t", "Text"],
-        ["bi-image", "Image"], ["bi-grid-3x3-gap", "Grid"],
-        ["bi-bezier2", "Path"], ["bi-palette", "Style"],
-        ["bi-link-45deg", "Link"], ["bi-code-slash", "Code"],
-        ["bi-magnet", "Snap"], ["bi-gear", "Settings"]
-      ];
-      for (const [icon, label] of tools) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "tool-button";
-        button.title = label;
-        button.setAttribute("aria-label", label);
-        button.innerHTML = `<i class="bi ${icon}"></i>`;
-        button.addEventListener("click", () => console.log("tool:", label));
-        grid.appendChild(button);
+      grid.className = containerClass;
+      for (const [icon, label] of TOOLS) {
+        grid.appendChild(makeButton(icon, label, onSelect));
       }
-      handle.setContent(grid);
+      return grid;
+    }
+
+    // Variant A — compact caption strip, fixed 2×6 grid.
+    // Width = 2-column content. autoheight tracks caption + body height.
+    function openA() {
+      const handle = panel.open("", "", {
+        width: colsWidth(2),
+        left: 40, top: 80,
+        minWidth: "auto", radius: 22,
+        role: "toolbar",
+        plugins: [
+          "focusable", "stackable", "draggable",
+          "rounded", "borderless",
+          "titled", "toolbar-caption",
+          "autoheight", "escapable"
+        ],
+        titled: false
+      });
+      handle.setContent(makeGrid("toolbox-grid", t => console.log("tool:", t)));
       return handle;
     }
 
-    document.getElementById("openToolbox").addEventListener("click", openToolbox);
-    openToolbox();
+    // Variant B — captionless + body-draggable.
+    // Width = 2-column content. Height fully content-driven via autoheight.
+    function openB() {
+      const handle = panel.open("", "", {
+        width: colsWidth(2),
+        left: 220, top: 80,
+        minWidth: "auto", radius: 22,
+        role: "toolbar",
+        plugins: [
+          "focusable", "stackable",
+          "rounded", "borderless",
+          "captionless", "autoheight",
+          "body-draggable"
+        ]
+      });
+      handle.setContent(makeGrid("toolbox-grid", t => console.log("tool:", t)));
+      return handle;
+    }
+
+    // Variant C — flex-wrap, resizable width.
+    // Explicit width = 3 columns, minWidth = 2 columns floor.
+    // autoheight tracks height as flex-wrap reflows on each width change.
+    function openC() {
+      const handle = panel.open("", "", {
+        width: colsWidth(3),
+        minWidth: colsWidth(2),
+        left: 400, top: 80,
+        radius: 22,
+        role: "toolbar",
+        plugins: [
+          "focusable", "stackable",
+          "resizable",
+          "rounded", "borderless",
+          "captionless", "autoheight",
+          "body-draggable"
+        ]
+      });
+      handle.setContent(makeGrid("toolbox-flex", t => console.log("tool:", t)));
+      return handle;
+    }
+
+    document.getElementById("openA").addEventListener("click", openA);
+    document.getElementById("openB").addEventListener("click", openB);
+    document.getElementById("openC").addEventListener("click", openC);
+
+    openA();
+    openB();
+    openC();
   </script>
 </body>
 </html>

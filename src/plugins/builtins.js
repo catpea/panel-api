@@ -14,6 +14,11 @@ import borderless from "./borderless.js";
 import titled from "./titled.js";
 import escapable from "./escapable.js";
 import keyboard from "./keyboard.js";
+import toolbarCaption from "./toolbar-caption.js";
+import bodyDraggable from "./body-draggable.js";
+import captionless from "./captionless.js";
+import shrinkwrap from "./shrinkwrap.js";
+import autoheight from "./autoheight.js";
 
 export const BUILTIN_PLUGINS = {
   focusable,
@@ -27,7 +32,12 @@ export const BUILTIN_PLUGINS = {
   borderless,
   titled,
   escapable,
-  keyboard
+  keyboard,
+  "toolbar-caption": toolbarCaption,
+  "body-draggable":  bodyDraggable,
+  captionless,
+  shrinkwrap,
+  autoheight
 };
 
 export function registerBuiltins(registry) {

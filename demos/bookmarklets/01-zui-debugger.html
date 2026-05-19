@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Bookmarklet: ZUI Geometry Debugger</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <style>
+    .bookmarklet-link {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #4e6ef2;
+      color: white;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: grab;
+      user-select: none;
+    }
+    .bookmarklet-link:hover { background: #6380f5; color: white; }
+    pre { white-space: pre-wrap; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <main class="container py-5" style="max-width: 860px">
+    <a href="../index.html" class="text-decoration-none small"><i class="bi bi-chevron-left"></i> back</a>
+    <h1 class="display-6 mb-2 mt-3">ZUI Geometry Debugger</h1>
+    <p class="text-secondary mb-1">
+      Bookmarklet that wraps any page in a zoom/pan surface and opens two
+      panels: real-time cursor coordinates (screen + world, zoom, pan) and a
+      geometry inspector that highlights hovered elements with bounding-box
+      measurements. The highlight overlay updates on scroll, resize, and
+      viewport change rather than clearing on stale data.
+    </p>
+    <p class="text-secondary small mb-4">
+      <strong>Note:</strong> Pages with a strict Content Security Policy that
+      blocks <code>import()</code> from external origins will prevent this
+      bookmarklet from loading.
+    </p>
+
+    <p class="mb-1 small fw-semibold">Drag to your bookmarks bar:</p>
+    <a id="bookmarklet-link" title="ZUI Debugger" class="bookmarklet-link mb-4 d-inline-block" href="#">
+      <i class="bi bi-rulers"></i> ZUI Debugger
+    </a>
+
+    <hr class="my-4">
+    <h2 class="h6 text-secondary mb-2">Source (loaded via CDN)</h2>
+    <pre class="bg-dark border rounded p-3 small text-light" id="source-display"></pre>
+  </main>
+
+  <script>
+    const CDN = "https://cdn.jsdelivr.net/npm/panel-api@latest";
+
+    const SOURCE = `(async () => {
+  if (window.__panelZuiDebugger) return;
+  window.__panelZuiDebugger = true;
+
+  const [{ default: panel }, { framePage }] = await Promise.all([
+    import("${CDN}/index.js"),
+    import("${CDN}/zui.js")
+  ]);
+
+  // Inline: re-emit pointer events with world-space coordinates.
+  function wireZuiPointerEvents(vp, opts = {}) {
+    const target = opts.target ?? vp.root;
+    const prefix = opts.prefix ?? "zui";
+    const aborter = opts.signal ? null : new AbortController();
+    const signal = opts.signal ?? aborter.signal;
+    const emit = (orig, type) => {
+      const w = vp.screenToWorld(orig.clientX, orig.clientY);
+      target.dispatchEvent(new CustomEvent(prefix + type, {
+        bubbles: true,
+        detail: { x: w.x, y: w.y, pointerId: orig.pointerId, original: orig }
+      }));
+    };
+    for (const t of ["pointerdown","pointermove","pointerup","pointercancel"])
+      target.addEventListener(t, e => emit(e, t), { signal });
+    return () => aborter?.abort();
+  }
+
+  // Inline: apply shrinkwrap-style auto-height to a panel (CDN may lack the plugin).
+  // Uses !important CSS so it beats any inline height set by other plugins.
+  function autoHeight(handle) {
+    if (!document.querySelector('#__panel_ah_styles')) {
+      const s = document.createElement('style');
+      s.id = '__panel_ah_styles';
+      s.textContent =
+        'dom-panel[data-autoheight]{height:auto!important;min-height:0!important}' +
+        'dom-panel[data-autoheight] [part~="body"]{height:auto!important;overflow:visible!important;min-height:0!important}';
+      document.head.appendChild(s);
+    }
+    handle.element.dataset.autoheight = '';
+  }
+
+  // Wrap the page in a ZUI surface.
+  const viewport = framePage();
+  panel.attachViewport(viewport);
+
+  // --- Coordinates panel (auto-height so no scrollbar) ---
+  // title inside options overrides the "Panel" default in older CDN versions.
+  const coordHandle = panel.open("", "Coordinates", {
+    title: "Coordinates",
+    width: 260, left: window.innerWidth - 280, top: 10,
+    plugins: ["focusable","stackable","draggable","closable","rounded","titled","escapable"]
+  });
+  autoHeight(coordHandle);
+  const coordEl = document.createElement("div");
+  coordEl.style.cssText = "font-family:monospace;font-size:13px;line-height:1.6";
+  coordHandle.element.setContent(coordEl);
+
+  wireZuiPointerEvents(viewport);
+  viewport.root.addEventListener("zuipointermove", e => {
+    const s = viewport.snapshot();
+    coordEl.innerHTML =
+      \`<div>Screen  <b>\${e.detail.original.clientX.toFixed(0)}, \${e.detail.original.clientY.toFixed(0)}</b></div>\` +
+      \`<div>World   <b>\${e.detail.x.toFixed(2)}, \${e.detail.y.toFixed(2)}</b></div>\` +
+      \`<div>Zoom    <b>\${s.zoom.toFixed(3)}</b></div>\` +
+      \`<div>Pan     <b>\${s.x.toFixed(1)}, \${s.y.toFixed(1)}</b></div>\`;
+  });
+
+  // --- Geometry inspector panel ---
+  const geoHandle = panel.open("", "Geometry Inspector", {
+    title: "Geometry Inspector",
+    width: 300, height: 220, left: window.innerWidth - 320, top: 190,
+    plugins: ["focusable","stackable","draggable","closable","rounded","titled","escapable"]
+  });
+  const geoEl = document.createElement("div");
+  geoEl.style.cssText = "font-family:monospace;font-size:12px;line-height:1.7";
+  geoHandle.element.setContent(geoEl);
+
+  // Highlight overlay (position: fixed, tracks getBoundingClientRect).
+  const overlay = document.createElement("div");
+  Object.assign(overlay.style, {
+    position: "fixed", pointerEvents: "none", border: "2px solid #7aa2ff",
+    background: "rgba(122,162,255,0.08)", boxSizing: "border-box",
+    zIndex: "9999", display: "none"
+  });
+  document.body.appendChild(overlay);
+
+  let lastTarget = null;
+
+  // Recompute overlay from the stored target on any layout change.
+  // Industry-standard approach: update on scroll/resize/viewportchange rather
+  // than clearing, so the highlight tracks the element through transforms.
+  function syncOverlay() {
+    if (!lastTarget || !document.body.contains(lastTarget)) {
+      overlay.style.display = "none";
+      lastTarget = null;
+      return;
+    }
+    const r = lastTarget.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) { overlay.style.display = "none"; return; }
+    Object.assign(overlay.style, {
+      display: "block",
+      left: r.left + "px", top: r.top + "px",
+      width: r.width + "px", height: r.height + "px"
+    });
+  }
+
+  window.addEventListener("scroll",          syncOverlay, { capture: true, passive: true });
+  window.addEventListener("resize",          syncOverlay, { passive: true });
+  window.addEventListener("viewportchange",  syncOverlay, { passive: true });
+
+  document.addEventListener("mouseover", e => {
+    const t = e.target;
+    if (t === overlay || t.closest("dom-panel")) {
+      overlay.style.display = "none";
+      lastTarget = null;
+      return;
+    }
+    lastTarget = t;
+    const r = t.getBoundingClientRect();
+    Object.assign(overlay.style, {
+      display: "block",
+      left: r.left + "px", top: r.top + "px",
+      width: r.width + "px", height: r.height + "px"
+    });
+    const tag = t.tagName.toLowerCase();
+    const cls = t.className && typeof t.className === "string"
+      ? \`.\${[...t.classList].join(".")}\` : "";
+    geoEl.innerHTML =
+      \`<div><b>\${tag}\${cls}</b></div>\` +
+      \`<div>x <b>\${r.left.toFixed(1)}</b>  y <b>\${r.top.toFixed(1)}</b></div>\` +
+      \`<div>w <b>\${r.width.toFixed(1)}</b>  h <b>\${r.height.toFixed(1)}</b></div>\` +
+      \`<div>scroll <b>\${t.scrollLeft.toFixed(0)}, \${t.scrollTop.toFixed(0)}</b></div>\` +
+      \`<div>children <b>\${t.children.length}</b></div>\`;
+  });
+})();`;
+
+    document.getElementById("source-display").textContent = SOURCE;
+    const minified = SOURCE.replace(/^\s*\/\/.*$/gm, "").replace(/\n\s*/g, " ").trim();
+    document.getElementById("bookmarklet-link").href = "javascript:" + encodeURIComponent(minified);
+  </script>
+</body>
+</html>

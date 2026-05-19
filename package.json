@@ -16,10 +16,13 @@
     "index.js",
     "zui.js",
     "src",
-    "TODO.md"
+    "docs",
+    "tutorials",
+    "ROADMAP.md"
   ],
   "scripts": {
     "dev": "http-server -c-1 ./ -o /demos/",
+    "test": "playwright test",
     "save": "git add .; git commit -m 'Updated Release'; npm version patch; npm publish; git push --follow-tags;"
   },
   "keywords": [
@@ -45,5 +48,8 @@
   "funding": {
     "type": "github",
     "url": "https://github.com/sponsors/catpea"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
   }
 }

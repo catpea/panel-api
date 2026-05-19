@@ -53,14 +53,17 @@ The `url` argument exists for `window.open()` familiarity. URL-backed (iframe) p
 | `left` | number | `96` | Initial left offset in panel-layer coordinates |
 | `top` | number | `96` | Initial top offset |
 | `radius` | number | `16` | Corner radius (px) — also settable via `--panel-radius` |
-| `minWidth` / `minHeight` | number | `184` / `96` | Resize lower bound |
+| `minWidth` | number \| `"auto"` \| `"fit-content"` | `184` | Minimum width. Pass `"auto"` to remove the constraint, `"fit-content"` to match content. Writes `--panel-min-width`. |
+| `minHeight` | number | `96` | Resize lower bound. Ignored when `autoheight` / `shrinkwrap` is active. |
 | `maxWidth` / `maxHeight` | number | `Infinity` | Resize upper bound |
 | `borderless` | boolean | `false` | Remove the panel border |
 | `role` | string | `"dialog"` | ARIA role on the panel element |
 | `labelledBy` | string | — | Sets `aria-labelledby` on the panel |
 | `closeOnEscape` | boolean | `true` | Whether the `escapable` plugin closes on Esc |
 | `keyboardMove` / `keyboardResize` | boolean | `false` | Arrow keys move/resize via `keyboard` plugin |
-| `plugins` | string[] | see [`PANEL_DEFAULTS`](#panel_defaults) | Plugin names to install |
+| `titled` | boolean | — | When `false`, the `titled` plugin hides the title text (caption strip remains). |
+| `captionHeight` | string | `"22px"` | Custom caption height for `toolbar-caption`. |
+| `plugins` | string[] | see [`PANEL_DEFAULTS`](#panel_defaults) | Plugin names to install. Built-ins: `focusable`, `stackable`, `draggable`, `resizable`, `closable`, `miniaturizable`, `pinnable`, `rounded`, `borderless`, `titled`, `escapable`, `keyboard`, `toolbar-caption`, `body-draggable`, `captionless`, `shrinkwrap`, `autoheight`. |
 | `coordinateSpace` | `"screen" \| "document" \| "world" \| "element"` | `"screen"` | Coordinate space the position is interpreted in |
 | `pluginOptions` | object | — | Per-plugin overrides (keyed by plugin name) |
 
@@ -271,4 +274,4 @@ handle.actions.querySelector("[data-pin]").click();
 
 Plugin installation errors are caught and emitted as `panelpluginerror` events on the panel element; the rest of the panel continues to work. Programmatic errors thrown from public methods follow normal DOM semantics (uncaught exceptions).
 
-The formal error class hierarchy from the [roadmap](../TODO.md) (`PanelNotAllowedError`, `PanelClosedError`, etc.) is **not yet implemented** — using these names will be a future addition.
+The formal error class hierarchy from the [roadmap](../ROADMAP.md) (`PanelNotAllowedError`, `PanelClosedError`, etc.) is **not yet implemented** — using these names will be a future addition.

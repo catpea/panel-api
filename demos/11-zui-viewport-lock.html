@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Viewport Lock</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <style>
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+
+    #viewport {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    #surface {
+      position: absolute;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      transform-origin: 0 0;
+    }
+
+    .world-box {
+      position: absolute;
+      width: 130px;
+      height: 90px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      color: rgba(255,255,255,.9);
+      cursor: grab;
+      user-select: none;
+      border: 1px solid rgba(255,255,255,.15);
+      box-shadow: 0 4px 20px rgba(0,0,0,.4);
+    }
+    .world-box span { font-size: 10px; font-weight: 400; opacity: .7; }
+    .world-box:active { cursor: grabbing; }
+    .world-box.dragging { opacity: .85; }
+
+    #surface::before {
+      content: "";
+      position: absolute;
+      inset: -4000px;
+      background-image:
+        linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+      background-size: 80px 80px;
+    }
+
+    /* Locked overlay tint */
+    #viewport.locked-state::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 3px solid rgba(255, 160, 80, 0.5);
+      pointer-events: none;
+      z-index: 500;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewport">
+    <div id="surface"></div>
+  </div>
+
+  <script type="module">
+    import panel from "../index.js";
+    import { PanelViewport, wireZuiPointerEvents, createViewportLock } from "../zui.js";
+
+    const root    = document.getElementById("viewport");
+    const surface = document.getElementById("surface");
+
+    // Build viewport. Pass interactions:false — createViewportLock manages them.
+    const viewport = new PanelViewport({ root, surface });
+    panel.attachViewport(viewport);
+
+    // createViewportLock wires interactions and exposes lock()/unlock().
+    // Pass ignoreSelector so .world-box drags don't start a pan.
+    const lock = createViewportLock(viewport, {
+      ignoreSelector: "dom-panel, button, a, [contenteditable], input, textarea, select, .world-box"
+    });
+
+    // Wire corrected pointer events (world-space x/y in event.detail).
+    wireZuiPointerEvents(viewport);
+
+    // --- World boxes ---
+    const COLORS = ["#1e3a5f", "#1a3d2b", "#3d1a1a", "#2d1f4e"];
+    [
+      { label: "Drag me", sub: "world coords", x: 160, y: 140 },
+      { label: "Drag me", sub: "world coords", x: 380, y: 220 },
+      { label: "Drag me", sub: "world coords", x: 240, y: 360 },
+      { label: "Drag me", sub: "world coords", x: 560, y: 160 },
+    ].forEach(({ label, sub, x, y }, i) => {
+      const el = document.createElement("div");
+      el.className = "world-box";
+      el.innerHTML = `${label}<span>${sub}</span>`;
+      el.style.cssText = `left:${x}px;top:${y}px;background:${COLORS[i]}`;
+      surface.appendChild(el);
+    });
+
+    // Drag boxes via zui pointer events (world-space, zoom-correct).
+    root.addEventListener("zuipointerdown", e => {
+      const box = e.detail.original.target.closest(".world-box");
+      if (!box) return;
+      box.classList.add("dragging");
+
+      const sw = { x: e.detail.x, y: e.detail.y };
+      const sb = { x: parseFloat(box.style.left), y: parseFloat(box.style.top) };
+      const id = e.detail.pointerId;
+      const ctrl = new AbortController();
+
+      root.addEventListener("zuipointermove", m => {
+        if (m.detail.pointerId !== id) return;
+        box.style.left = (sb.x + m.detail.x - sw.x) + "px";
+        box.style.top  = (sb.y + m.detail.y - sw.y) + "px";
+      }, { signal: ctrl.signal });
+
+      const end = () => { box.classList.remove("dragging"); ctrl.abort(); };
+      root.addEventListener("zuipointerup",     end, { signal: ctrl.signal });
+      root.addEventListener("zuipointercancel", end, { signal: ctrl.signal });
+    });
+
+    // --- Lock control panel ---
+    const ctrlHandle = panel.open("", "Viewport Lock", {
+      width: 300, height: 310, left: 20, top: 20,
+      plugins: ["focusable", "stackable", "draggable", "closable", "rounded", "titled"]
+    });
+
+    const ctrlEl = document.createElement("div");
+    ctrlEl.style.cssText = "display:flex;flex-direction:column;gap:10px";
+    ctrlEl.innerHTML = `
+      <div id="lock-status" style="
+        padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;
+        background:rgba(122,162,255,.12);color:#7aa2ff;text-align:center">
+        UNLOCKED — pan and zoom active
+      </div>
+      <p style="font-size:12px;color:#aaa;margin:0">
+        <strong>Problem:</strong> after zooming or panning, pointer coordinates
+        no longer map to world positions — drag operations break.<br><br>
+        <strong>Solution:</strong> <code>lock()</code> aborts interactions and
+        resets the viewport to identity (zoom=1, pan=0,0). Screen coordinates
+        equal world coordinates again. <code>unlock()</code> re-enables pan/zoom
+        and resets again for a clean start.
+      </p>
+      <div style="display:flex;gap:8px">
+        <button id="btn-lock" class="btn btn-sm btn-warning flex-fill">
+          <i class="bi bi-lock"></i> Lock viewport
+        </button>
+        <button id="btn-unlock" class="btn btn-sm btn-success flex-fill" disabled>
+          <i class="bi bi-unlock"></i> Unlock viewport
+        </button>
+      </div>
+      <div style="font-family:monospace;font-size:11px;color:#888">
+        <div>zoom  <span id="vi-zoom">1.000</span></div>
+        <div>pan   <span id="vi-pan">0, 0</span></div>
+      </div>
+    `;
+    ctrlHandle.setContent(ctrlEl);
+
+    const statusEl  = ctrlEl.querySelector("#lock-status");
+    const btnLock   = ctrlEl.querySelector("#btn-lock");
+    const btnUnlock = ctrlEl.querySelector("#btn-unlock");
+
+    btnLock.addEventListener("click", () => {
+      lock.lock();
+      root.classList.add("locked-state");
+      statusEl.style.background = "rgba(255,160,80,.15)";
+      statusEl.style.color = "#ffa050";
+      statusEl.textContent = "LOCKED — identity transform, drag works correctly";
+      btnLock.disabled   = true;
+      btnUnlock.disabled = false;
+    });
+
+    btnUnlock.addEventListener("click", () => {
+      lock.unlock();
+      root.classList.remove("locked-state");
+      statusEl.style.background = "rgba(122,162,255,.12)";
+      statusEl.style.color = "#7aa2ff";
+      statusEl.textContent = "UNLOCKED — pan and zoom active";
+      btnLock.disabled   = false;
+      btnUnlock.disabled = true;
+    });
+
+    window.addEventListener("viewportchange", e => {
+      document.getElementById("vi-zoom").textContent = e.detail.zoom.toFixed(3);
+      document.getElementById("vi-pan").textContent =
+        `${e.detail.x.toFixed(1)}, ${e.detail.y.toFixed(1)}`;
+    });
+
+    // Back link
+    const backHandle = panel.open("", "", {
+      width: 200, height: 52, left: 20, top: window.innerHeight - 72,
+      minWidth: "auto",
+      plugins: ["focusable", "stackable", "draggable", "rounded", "captionless"]
+    });
+    backHandle.setHTML(`<a href="./index.html" class="text-decoration-none small"><i class="bi bi-chevron-left"></i> back to demos</a>`);
+  </script>
+</body>
+</html>

@@ -117,8 +117,10 @@ export class PanelManager extends EventTarget {
     }
     if (url) console.info("[panel-api] URL-backed panels are not yet implemented; opening empty panel:", url);
 
-    const merged = applyDefaults(normalizeOptions(features), this.defaults);
-    if (!merged.title) merged.title = title;
+    const rawFeatures = normalizeOptions(features);
+    const merged = applyDefaults(rawFeatures, this.defaults);
+    // The positional `title` argument wins unless features explicitly set `title`.
+    if (!("title" in rawFeatures)) merged.title = title;
 
     // Create the raw element and wire handle.element before initialize() runs,
     // so plugins can access handle.element during installation.

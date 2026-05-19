@@ -35,11 +35,13 @@ export const defaultStyles = /* css */ `
     --panel-font-size: 14px;
     --panel-z: auto;
 
+    --panel-min-width: 184px;
+
     position: absolute;
     left: var(--panel-left, 80px);
     top: var(--panel-top, 80px);
     display: block;
-    min-width: 184px;
+    min-width: var(--panel-min-width);
     min-height: 64px;
     border-radius: var(--panel-radius);
     border: var(--panel-border);
@@ -113,12 +115,14 @@ export const defaultStyles = /* css */ `
 
   /* ---------- body ---------- */
   dom-panel [part~="body"] {
+    --panel-body-padding: 14px;
+
     container-type: inline-size;
     position: relative;
     width: 100%;
     height: calc(100% - var(--panel-caption-height));
     min-height: 60px;
-    padding: 14px;
+    padding: var(--panel-body-padding);
     overflow: auto;
     /* Bring back text selection inside the body — panel root disables it. */
     user-select: text;
@@ -151,6 +155,10 @@ export const defaultStyles = /* css */ `
   @media (prefers-reduced-motion: reduce) {
     dom-panel, dom-panel * { transition: none !important; animation: none !important; }
   }
+
+  /* ---------- autoheight ---------- */
+  /* When autoheight owns height, only horizontal resize is meaningful. */
+  dom-panel[data-autoheight] [part~="resize-handle"] { cursor: ew-resize; }
 
   /* ---------- declarative support ---------- */
   [panel]:not([panel-open]) { display: none; }

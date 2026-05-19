@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Bookmarklet: Text Extractor</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <style>
+    .bookmarklet-link {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #4e6ef2;
+      color: white;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: grab;
+      user-select: none;
+    }
+    .bookmarklet-link:hover { background: #6380f5; color: white; }
+    pre { white-space: pre-wrap; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <main class="container py-5" style="max-width: 860px">
+    <a href="../index.html" class="text-decoration-none small"><i class="bi bi-chevron-left"></i> back</a>
+    <h1 class="display-6 mb-2 mt-3">Text Extractor</h1>
+    <p class="text-secondary mb-1">
+      Bookmarklet for developers refactoring websites or scraping content.
+      Click any element on the page to capture its text, tag name, CSS selector,
+      and <code>innerText</code>. Accumulates captures in a floating panel with
+      copy-to-clipboard and export-as-JSON.
+    </p>
+    <p class="text-secondary small mb-4">
+      Demonstrates: overlay/highlight mechanics, click interception, structured
+      data collection via panels, and the panel API's content manipulation model.
+    </p>
+
+    <p class="mb-1 small fw-semibold">Drag to your bookmarks bar:</p>
+    <a id="bookmarklet-link" title="Text Extractor" class="bookmarklet-link mb-4 d-inline-block" href="#">
+      <i class="bi bi-file-text"></i> Text Extractor
+    </a>
+
+    <hr class="my-4">
+    <h2 class="h6 text-secondary mb-2">Source (loaded via CDN)</h2>
+    <pre class="bg-dark border rounded p-3 small text-light" id="source-display"></pre>
+  </main>
+
+  <script>
+    const CDN = "https://cdn.jsdelivr.net/npm/panel-api@latest";
+
+    const SOURCE = `(async () => {
+  if (window.__panelTextExtractor) return;
+  window.__panelTextExtractor = true;
+
+  const { default: panel } = await import("${CDN}/index.js");
+
+  const extractions = [];
+  let active = true;
+
+  // Build panel UI.
+  const root = document.createElement("div");
+  root.style.cssText = "display:flex;flex-direction:column;gap:6px;height:100%";
+
+  const toolbar = document.createElement("div");
+  toolbar.style.cssText = "display:flex;gap:6px;align-items:center;flex-shrink:0;flex-wrap:wrap";
+  const statusEl = document.createElement("span");
+  statusEl.style.cssText = "font-size:12px;color:#7aa2ff;flex:1";
+  statusEl.textContent = "Click any element to capture";
+
+  const toggleBtn = document.createElement("button");
+  toggleBtn.textContent = "Pause";
+  toggleBtn.style.cssText = "font-size:11px;padding:3px 8px;border:1px solid rgba(255,255,255,.2);border-radius:5px;background:rgba(255,255,255,.08);color:#f4f6ff;cursor:pointer";
+  toggleBtn.addEventListener("click", () => {
+    active = !active;
+    toggleBtn.textContent = active ? "Pause" : "Resume";
+    statusEl.textContent = active ? "Click any element to capture" : "Paused";
+  });
+
+  const copyBtn = document.createElement("button");
+  copyBtn.textContent = "Copy JSON";
+  copyBtn.style.cssText = "font-size:11px;padding:3px 8px;border:1px solid rgba(255,255,255,.2);border-radius:5px;background:rgba(255,255,255,.08);color:#f4f6ff;cursor:pointer";
+  copyBtn.addEventListener("click", () => {
+    navigator.clipboard.writeText(JSON.stringify(extractions, null, 2))
+      .then(() => { copyBtn.textContent = "Copied!"; setTimeout(() => { copyBtn.textContent = "Copy JSON"; }, 1500); });
+  });
+
+  const clearBtn = document.createElement("button");
+  clearBtn.textContent = "Clear";
+  clearBtn.style.cssText = "font-size:11px;padding:3px 8px;border:1px solid rgba(255,255,255,.2);border-radius:5px;background:rgba(255,255,255,.08);color:#f4f6ff;cursor:pointer";
+
+  toolbar.append(statusEl, toggleBtn, copyBtn, clearBtn);
+
+  const list = document.createElement("div");
+  list.style.cssText = "overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:6px";
+
+  clearBtn.addEventListener("click", () => { extractions.length = 0; list.innerHTML = ""; });
+
+  root.append(toolbar, list);
+
+  // CSS selector builder (simplified).
+  function buildSelector(el) {
+    if (el.id) return "#" + el.id;
+    const tag = el.tagName.toLowerCase();
+    const cls = el.classList.length ? "." + [...el.classList].slice(0, 2).join(".") : "";
+    return tag + cls;
+  }
+
+  function addEntry(el) {
+    const text = (el.innerText || el.textContent || "").trim().slice(0, 400);
+    if (!text) return;
+    const entry = {
+      tag: el.tagName.toLowerCase(),
+      selector: buildSelector(el),
+      text,
+      href: el.href || undefined,
+      timestamp: new Date().toISOString()
+    };
+    extractions.push(entry);
+    statusEl.textContent = \`\${extractions.length} captured\`;
+
+    const card = document.createElement("div");
+    card.style.cssText = "border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:8px;background:rgba(255,255,255,.04);font-size:12px";
+    card.innerHTML =
+      \`<div style="color:#7aa2ff;margin-bottom:3px">\${entry.tag} · <code style="font-size:11px">\${entry.selector}</code></div>\` +
+      \`<div style="color:#ccc;white-space:pre-wrap;word-break:break-word">\${text.slice(0, 200)}\${text.length > 200 ? "…" : ""}</div>\`;
+    list.prepend(card);
+  }
+
+  // Highlight overlay.
+  const overlay = document.createElement("div");
+  Object.assign(overlay.style, {
+    position: "fixed", pointerEvents: "none",
+    border: "2px solid #7aa2ff", background: "rgba(122,162,255,0.08)",
+    boxSizing: "border-box", zIndex: "9998", display: "none", borderRadius: "3px"
+  });
+  document.body.appendChild(overlay);
+
+  let lastTarget = null;
+
+  // Recompute overlay from stored target on any layout change (scroll, resize,
+  // viewport transform). This is the standard "live tracking" approach: rather
+  // than clearing the highlight, we reposition it using the element's current
+  // getBoundingClientRect(). If the element is gone or zero-size, we clear.
+  function syncOverlay() {
+    if (!active || !lastTarget || !document.body.contains(lastTarget)) {
+      overlay.style.display = "none";
+      lastTarget = null;
+      return;
+    }
+    const r = lastTarget.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) { overlay.style.display = "none"; return; }
+    Object.assign(overlay.style, {
+      display: "block",
+      left: r.left + "px", top: r.top + "px",
+      width: r.width + "px", height: r.height + "px"
+    });
+  }
+
+  window.addEventListener("scroll",         syncOverlay, { capture: true, passive: true });
+  window.addEventListener("resize",         syncOverlay, { passive: true });
+  window.addEventListener("viewportchange", syncOverlay, { passive: true });
+
+  document.addEventListener("mouseover", e => {
+    if (!active) return;
+    const t = e.target;
+    if (t === overlay || t.closest("dom-panel")) {
+      overlay.style.display = "none";
+      lastTarget = null;
+      return;
+    }
+    lastTarget = t;
+    syncOverlay();
+  }, true);
+
+  document.addEventListener("click", e => {
+    if (!active) return;
+    const t = e.target;
+    if (t.closest("dom-panel")) return;
+    e.preventDefault();
+    e.stopPropagation();
+    addEntry(t);
+  }, true);
+
+  // Pass title inside options so it overrides the "Panel" default in any CDN version.
+  const handle = panel.open("", "Text Extractor", {
+    title: "Text Extractor",
+    width: 340, height: 460, left: window.innerWidth - 360, top: 20,
+    plugins: ["focusable","stackable","draggable","closable","miniaturizable","rounded","titled","escapable"]
+  });
+  handle.setContent(root);
+})();`;
+
+    document.getElementById("source-display").textContent = SOURCE;
+    const minified = SOURCE.replace(/^\s*\/\/.*$/gm, "").replace(/\n\s*/g, " ").trim();
+    document.getElementById("bookmarklet-link").href = "javascript:" + encodeURIComponent(minified);
+  </script>
+</body>
+</html>

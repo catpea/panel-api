@@ -19,6 +19,7 @@ export function wireInteractions(viewport, options = {}) {
     if (event.target.closest(ignoreSelector)) return;
     panState = { id: event.pointerId, x: event.clientX, y: event.clientY };
     root.setPointerCapture(event.pointerId);
+    root.style.userSelect = "none";
   }, { signal });
 
   root.addEventListener("pointermove", event => {
@@ -31,6 +32,7 @@ export function wireInteractions(viewport, options = {}) {
   const endPan = event => {
     if (!panState || panState.id !== event.pointerId) return;
     if (root.hasPointerCapture(event.pointerId)) root.releasePointerCapture(event.pointerId);
+    root.style.userSelect = "";
     panState = null;
   };
 

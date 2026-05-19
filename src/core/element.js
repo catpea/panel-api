@@ -81,6 +81,10 @@ export const PanelController = {
     if (Number.isFinite(options.left)) this.style.setProperty("--panel-left", `${options.left}px`);
     if (Number.isFinite(options.top)) this.style.setProperty("--panel-top", `${options.top}px`);
     if (Number.isFinite(options.radius)) this.style.setProperty("--panel-radius", `${options.radius}px`);
+    if (options.minWidth != null) {
+      this.style.setProperty("--panel-min-width",
+        Number.isFinite(options.minWidth) ? `${options.minWidth}px` : String(options.minWidth));
+    }
     if (options.borderless !== undefined) this.dataset.borderless = String(options.borderless);
     if (options.role) this.setAttribute("role", options.role);
     if (options.labelledBy) this.setAttribute("aria-labelledby", options.labelledBy);
