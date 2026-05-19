@@ -1,6 +1,6 @@
 {
   "name": "panel-api",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "A durable application-chrome API for movable, resizable, in-page floating panels with optional ZUI (zooming user interface) integration. Plain ESM, no build step, no dependencies.",
   "type": "module",
   "main": "./index.js",
