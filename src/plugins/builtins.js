@@ -19,6 +19,9 @@ import bodyDraggable from "./body-draggable.js";
 import captionless from "./captionless.js";
 import shrinkwrap from "./shrinkwrap.js";
 import autoheight from "./autoheight.js";
+import anchored from "./anchored.js";
+import persistable from "./persistable.js";
+import snappable from "./snappable.js";
 
 export const BUILTIN_PLUGINS = {
   focusable,
@@ -37,7 +40,10 @@ export const BUILTIN_PLUGINS = {
   "body-draggable":  bodyDraggable,
   captionless,
   shrinkwrap,
-  autoheight
+  autoheight,
+  anchored,
+  persistable,
+  snappable
 };
 
 export function registerBuiltins(registry) {

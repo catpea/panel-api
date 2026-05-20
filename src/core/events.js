@@ -23,7 +23,10 @@ export const PANEL_EVENTS = Object.freeze({
   PIN: "panelpin",
   UNPIN: "panelunpin",
   ANCHOR_CHANGE: "panelanchorchange",
-  PLUGIN_ERROR: "panelpluginerror"
+  PLUGIN_ERROR: "panelpluginerror",
+  LOAD: "panelload",
+  ERROR: "panelerror",
+  NAVIGATE: "panelnavigate"
 });
 
 /**

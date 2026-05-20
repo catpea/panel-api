@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Document-space panels</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <style>
+    body { min-height: 300vh; }
+    .landmark {
+      position: absolute; left: 50px;
+      width: 280px; padding: 12px 16px;
+      background: rgba(122,162,255,.12); border: 1px solid rgba(122,162,255,.3);
+      border-radius: 8px; font-size: .85rem; color: #a8b4d8;
+    }
+  </style>
+</head>
+<body>
+  <!-- Landmarks in the document so we can see panels scrolling with them -->
+  <div class="landmark" style="top:100px"><i class="bi bi-geo-alt"></i> Landmark A — doc-y 100px</div>
+  <div class="landmark" style="top:600px"><i class="bi bi-geo-alt"></i> Landmark B — doc-y 600px</div>
+  <div class="landmark" style="top:1200px"><i class="bi bi-geo-alt"></i> Landmark C — doc-y 1200px</div>
+  <div class="landmark" style="top:2000px"><i class="bi bi-geo-alt"></i> Landmark D — doc-y 2000px</div>
+
+  <main class="container py-5">
+    <a href="./index.html" class="text-decoration-none small"><i class="bi bi-chevron-left"></i> back</a>
+
+    <h1 class="display-6 mb-3 mt-3">Document-space panels</h1>
+    <p class="text-secondary">
+      Pass <code>coordinateSpace: "document"</code> to mount a panel in the absolute document layer.
+      The panel's <code>left</code>/<code>top</code> are pixel offsets from the document origin — the
+      same coordinate system as <code>element.offsetTop</code> — so the panel scrolls with the page.
+    </p>
+
+    <div class="d-flex flex-wrap gap-2 my-4">
+      <button id="openAtCursor"  class="btn btn-primary"><i class="bi bi-cursor"></i> Open at scroll position</button>
+      <button id="openAtLandmark" class="btn btn-outline-secondary"><i class="bi bi-geo-alt"></i> Open near landmarks</button>
+      <button id="openScreenVsDoc" class="btn btn-outline-secondary"><i class="bi bi-layers"></i> Screen vs Document comparison</button>
+      <button id="closeAll"      class="btn btn-outline-danger ms-auto">Close all</button>
+    </div>
+
+    <pre class="bg-body-tertiary p-3 rounded"><code>import panel from "../index.js";
+
+// Open at document coordinates — panel scrolls with the page.
+panel.open("", "Note", {
+  coordinateSpace: "document",
+  left: 200,    // pixels from left edge of document
+  top:  800,    // pixels from top of document
+  width: 280, height: 180
+});
+
+// Tip: place next to a DOM element using its offsetTop.
+const el = document.getElementById("my-section");
+panel.open("", "Annotation", {
+  coordinateSpace: "document",
+  left: el.offsetLeft + el.offsetWidth + 16,
+  top:  el.offsetTop,
+  width: 240, height: 160
+});</code></pre>
+  </main>
+
+  <script type="module">
+    import panel from "../index.js";
+
+    document.getElementById("openAtCursor").addEventListener("click", () => {
+      const scrollY = window.scrollY;
+      const handle = panel.open("", "Document note", {
+        coordinateSpace: "document",
+        left: 80, top: scrollY + 120,
+        width: 300, height: 180
+      });
+      handle.setHTML(`
+        <p>Opened at document-y <code>${scrollY + 120}px</code>.</p>
+        <p class="text-secondary small">Scroll the page — this panel scrolls with it.</p>
+      `);
+    });
+
+    document.getElementById("openAtLandmark").addEventListener("click", () => {
+      const landmarks = [100, 600, 1200, 2000];
+      const letters   = ["A", "B", "C", "D"];
+      landmarks.forEach((docY, i) => {
+        const h = panel.open("", `Note at Landmark ${letters[i]}`, {
+          coordinateSpace: "document",
+          left: 350, top: docY,
+          width: 260, height: 120
+        });
+        h.setHTML(`<p>Anchored at document-y = <code>${docY}px</code>. Scroll to Landmark ${letters[i]} to see me.</p>`);
+      });
+    });
+
+    document.getElementById("openScreenVsDoc").addEventListener("click", () => {
+      // Screen-space panel: stays fixed even when page scrolls
+      const s = panel.open("", "Screen-space (fixed)", {
+        coordinateSpace: "screen",
+        left: window.innerWidth - 340, top: 80,
+        width: 300, height: 140
+      });
+      s.setHTML(`<p class="small">I am <strong>fixed</strong> to the viewport. I do NOT scroll with the page.</p>`);
+
+      // Document-space panel: scrolls with page
+      const d = panel.open("", "Document-space (scrolls)", {
+        coordinateSpace: "document",
+        left: window.innerWidth - 340, top: window.scrollY + 260,
+        width: 300, height: 140
+      });
+      d.setHTML(`<p class="small">I am in the <strong>document layer</strong>. I scroll with the page.</p>`);
+    });
+
+    document.getElementById("closeAll").addEventListener("click", () => panel.closeAll());
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

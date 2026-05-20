@@ -76,6 +76,62 @@ export class PanelHandle {
 
   focus() { this.element.focusPanel(); return this; }
 
+  // -------- iframe API --------
+
+  /** The <iframe> element, or null if this is not a URL-backed panel. */
+  get iframe() { return this.element.iframeElement ?? null; }
+
+  /** The current URL of the panel (options.url), or null for content panels. */
+  get url() { return this.element.options?.url ?? null; }
+
+  /**
+   * Navigate the iframe to a new URL. Dispatches cancelable `panelnavigate`
+   * first; returns false if canceled, true otherwise. No-op for non-URL panels.
+   */
+  navigate(url) { return this.element.navigate(url); }
+
+  /** Reload the iframe. Cross-origin safe. No-op for non-URL panels. */
+  reload() { this.element.reload(); return this; }
+
+  // -------- state persistence --------
+
+  /**
+   * Manually save current position, size, and minimized state to localStorage.
+   * Requires `persist: "key"` in options (set via `persistable` plugin).
+   */
+  saveState() {
+    const key = this.element.options?.persist;
+    if (!key) return this;
+    try {
+      const { left, top, width, height } = this.bounds;
+      globalThis.localStorage?.setItem(
+        `panel-api:${key}`,
+        JSON.stringify({ left, top, width, height, minimized: this.minimized })
+      );
+    } catch { /* ignore storage errors */ }
+    return this;
+  }
+
+  /**
+   * Manually restore state from localStorage for the panel's `persist` key.
+   */
+  restoreState() {
+    const key = this.element.options?.persist;
+    if (!key) return this;
+    try {
+      const saved = JSON.parse(globalThis.localStorage?.getItem(`panel-api:${key}`) ?? "null");
+      if (saved) {
+        if (Number.isFinite(saved.left) && Number.isFinite(saved.top))
+          this.moveTo(saved.left, saved.top);
+        if (Number.isFinite(saved.width) && Number.isFinite(saved.height))
+          this.resizeTo(saved.width, saved.height);
+        if (saved.minimized === true)  this.minimize();
+        if (saved.minimized === false) this.restore();
+      }
+    } catch { /* ignore corrupt storage */ }
+    return this;
+  }
+
   moveTo(left, top) {
     this.element.style.setProperty("--panel-left", `${left}px`);
     this.element.style.setProperty("--panel-top", `${top}px`);

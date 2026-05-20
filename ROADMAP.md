@@ -32,23 +32,23 @@ The Panel API is designed to be a durable application-chrome API — not just a 
 
 ---
 
-## Level 2 — ZUI-ready (planned)
+## Level 2 — ZUI-ready ✓ (complete)
 
-- `coordinateSpace: "world"` directly on `panel.open()` (auto-project via `worldToScreen`)
-- Element-anchored panels (`coordinateSpace: "element"`, `placement`, `offset`)
-- Collision avoidance — auto-reposition panels to avoid covering content or the pointer
-- State persistence (`persist: "key"` + `saveState` / `restoreState`)
-- Document-space panels (scroll with page)
+- ✓ `coordinateSpace: "world"` on `panel.open()` — auto-projects `worldX`/`worldY` via `worldToScreen`, auto-pins via `pinnable`
+- ✓ Element-anchored panels (`coordinateSpace: "element"`, `anchorElement`, `placement`, `offset`, `followAnchor`)
+- ✓ Collision avoidance — `collisionStrategy: "flip"|"shift"|"none"` in the `anchored` plugin
+- ✓ State persistence — `persist: "key"` option + `persistable` built-in plugin + `handle.saveState()` / `handle.restoreState()`
+- ✓ Document-space panels — `coordinateSpace: "document"` mounts in a separate `position: absolute` layer; panels scroll with page
 
 ---
 
-## Level 3 — Application-grade (planned)
+## Level 3 — Application-grade (partial)
 
-- Snap-to-edges and snap-to-panels
+- ✓ Snap-to-edges and snap-to-panels — `snappable` built-in plugin (`snapEdges`, `snapPanels`, `snapThreshold`)
+- ✓ URL / iframe-backed panels — `panel.open(url)` with `handle.iframe`, `handle.navigate()`, `handle.reload()`, `sandbox`, `allow`, `referrerPolicy`
 - Docking (sidebar, bottom bar)
 - Tabbed panel groups
 - Panel workspaces (save/restore named layouts)
-- URL / iframe-backed panels (content isolation model)
 
 ---
 

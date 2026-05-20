@@ -47,8 +47,12 @@ export function promoteSection(section, manager) {
   if (!section || !manager) return null;
   if (section.hasAttribute("panel-open")) return manager.find(section.id);
 
-  const children = [...section.childNodes];
-  const handle = manager.open("", section.getAttribute("panel-title") || section.id || "Panel", {
+  const url = section.getAttribute("panel-url") ?? "";
+  const coordinateSpace = section.getAttribute("panel-coordinate-space") ?? undefined;
+  // For URL-backed panels the iframe fills the body; existing DOM children stay in the section.
+  const children = url ? [] : [...section.childNodes];
+
+  const options = {
     title: section.getAttribute("panel-title") || section.id || "Panel",
     width: readNumericAttribute(section, "panel-width") ?? 400,
     height: readNumericAttribute(section, "panel-height") ?? 300,
@@ -57,15 +61,45 @@ export function promoteSection(section, manager) {
     plugins: collectPluginsFromAttributes(section).length
       ? collectPluginsFromAttributes(section)
       : undefined
-  });
+  };
+
+  if (coordinateSpace !== undefined) options.coordinateSpace = coordinateSpace;
+
+  // iframe attributes
+  const sandbox = section.getAttribute("panel-sandbox");
+  if (sandbox !== null) options.sandbox = sandbox;
+  const allow = section.getAttribute("panel-allow");
+  if (allow !== null) options.allow = allow;
+  const referrerPolicy = section.getAttribute("panel-referrerpolicy");
+  if (referrerPolicy !== null) options.referrerPolicy = referrerPolicy;
+
+  // element-anchor attributes
+  const anchorId = section.getAttribute("panel-anchor");
+  if (anchorId) {
+    const anchorEl = document.getElementById(anchorId);
+    if (anchorEl) options.anchorElement = anchorEl;
+  }
+  const placement = section.getAttribute("panel-placement");
+  if (placement) options.placement = placement;
+  const offsetAttr = section.getAttribute("panel-offset");
+  if (offsetAttr !== null) {
+    const v = Number(offsetAttr);
+    if (Number.isFinite(v)) options.offset = v;
+  }
+
+  // persistence
+  const persist = section.getAttribute("panel-persist");
+  if (persist) options.persist = persist;
+
+  const handle = manager.open(url, options.title, options);
   if (!handle) return null;
-  handle.body.append(...children);
+  if (children.length) handle.body.append(...children);
   section.setAttribute("panel-open", "");
   if (section.id) handle.element.id = section.id + "--panel";
 
   handle.element.addEventListener("panelclose", () => {
     section.removeAttribute("panel-open");
-    if (handle.body.childNodes.length) section.append(...handle.body.childNodes);
+    if (!url && handle.body.childNodes.length) section.append(...handle.body.childNodes);
   }, { once: true });
 
   return handle;

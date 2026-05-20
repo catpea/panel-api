@@ -1,8 +1,9 @@
 // PanelManager — the top-level object exposed as the default `panel` export.
 //
 // Responsibilities:
-//   * Create and own the panel layer (the fixed, non-zoomed sibling that holds
-//     all dom-panel elements).
+//   * Create and own the panel layers:
+//       .panel-layer          — position:fixed, for default screen-space panels
+//       .panel-document-layer — position:absolute at origin, for document-space panels
 //   * Hold the plugin registry so authors can extend behaviour.
 //   * Track live panel handles and the stacking order.
 //   * Optionally hold a reference to a PanelViewport so coordinate-space="world"
@@ -32,6 +33,7 @@ export class PanelManager extends EventTarget {
     this.document = doc;
     this.defaults = defaults;
     this._layer = layer;
+    this._documentLayer = null;
     this._handles = new Set();
     this._viewport = null;
   }
@@ -52,15 +54,12 @@ export class PanelManager extends EventTarget {
     return this;
   }
 
-  /** The DOM container all panels are mounted into. Created lazily. */
+  /** The DOM container for screen-space panels (position: fixed). Created lazily. */
   get layer() {
     if (this._layer && this._layer.isConnected) return this._layer;
     if (!this.document) return null;
     const existing = this.document.querySelector(".panel-layer[data-panel-api-layer]");
-    if (existing) {
-      this._layer = existing;
-      return existing;
-    }
+    if (existing) { this._layer = existing; return existing; }
     const layer = this.document.createElement("div");
     layer.className = "panel-layer";
     layer.setAttribute("data-panel-api-layer", "");
@@ -71,8 +70,25 @@ export class PanelManager extends EventTarget {
   }
 
   /**
-   * Override the layer. Useful when callers want panels nested in a specific
-   * subtree (e.g., inside a ZUI viewport sibling).
+   * The DOM container for document-space panels (position: absolute at origin).
+   * Panels mounted here scroll with the page. Created lazily.
+   */
+  get documentLayer() {
+    if (this._documentLayer && this._documentLayer.isConnected) return this._documentLayer;
+    if (!this.document) return null;
+    const existing = this.document.querySelector(".panel-document-layer[data-panel-api-document-layer]");
+    if (existing) { this._documentLayer = existing; return existing; }
+    const layer = this.document.createElement("div");
+    layer.className = "panel-document-layer";
+    layer.setAttribute("data-panel-api-document-layer", "");
+    this.document.body.appendChild(layer);
+    this._documentLayer = layer;
+    return layer;
+  }
+
+  /**
+   * Override the screen-space layer. Useful when callers want panels nested in
+   * a specific subtree (e.g., inside a ZUI viewport sibling).
    */
   setLayer(element) {
     this._layer = element;
@@ -104,23 +120,42 @@ export class PanelManager extends EventTarget {
    *   panel.open("", "Inspector", "width=400,plugins=resizable;closable")
    *   panel.open({ title: "Inspector", width: 400 })
    *
-   * Returns a `PanelHandle`. The optional `url` argument exists for
-   * window.open() familiarity; we log a console message but do not load it —
-   * iframe-backed panels are a future feature (see TODO §11).
+   * Returns a `PanelHandle`. When `url` is non-empty the panel body is replaced
+   * with an `<iframe>` loaded from that URL; `handle.iframe` gives access to it.
+   *
+   * Coordinate spaces:
+   *   coordinateSpace: "screen"   (default) — left/top are viewport-relative pixels
+   *   coordinateSpace: "document" — left/top are document-relative; panel scrolls with page
+   *   coordinateSpace: "element"  — panel anchors to anchorElement; `anchored` plugin auto-added
+   *   coordinateSpace: "world"    — left/top (or worldX/worldY) are ZUI world coords; auto-pinned
    */
   open(url = "", title = "Panel", features = {}) {
     if (url && typeof url === "object") {
-      // panel.open({ ... }) form
       features = url;
       title = features.title ?? "Panel";
       url = "";
     }
-    if (url) console.info("[panel-api] URL-backed panels are not yet implemented; opening empty panel:", url);
 
     const rawFeatures = normalizeOptions(features);
     const merged = applyDefaults(rawFeatures, this.defaults);
-    // The positional `title` argument wins unless features explicitly set `title`.
     if (!("title" in rawFeatures)) merged.title = title;
+    if (url && !merged.url) merged.url = url;
+
+    // ── auto-install plugins for requested coordinate space and options ──────
+    const autoPlugins = [];
+    if (merged.coordinateSpace === "element" && !merged.plugins?.includes("anchored"))
+      autoPlugins.push("anchored");
+    if (merged.coordinateSpace === "world" && !merged.plugins?.includes("pinnable"))
+      autoPlugins.push("pinnable");
+    if (merged.persist && !merged.plugins?.includes("persistable"))
+      autoPlugins.push("persistable");
+    if (autoPlugins.length) merged.plugins = [...(merged.plugins ?? []), ...autoPlugins];
+
+    // ── for element-anchored panels, start off-screen to avoid a flash ───────
+    if (merged.coordinateSpace === "element") {
+      merged.left = -9999;
+      merged.top  = -9999;
+    }
 
     // Create the raw element and wire handle.element before initialize() runs,
     // so plugins can access handle.element during installation.
@@ -152,16 +187,33 @@ export class PanelManager extends EventTarget {
       return null;
     }
 
-    this.layer.appendChild(element);
+    // ── choose mount layer based on coordinate space ─────────────────────────
+    const targetLayer = merged.coordinateSpace === "document"
+      ? this.documentLayer
+      : this.layer;
+    targetLayer.appendChild(element);
+
     this._handles.add(handle);
     this.stack.add(handle);
     this.stack.bringToFront(handle);
     element.focusPanel();
 
+    // ── world-space: project worldX/worldY → screen and auto-pin ─────────────
+    if (merged.coordinateSpace === "world" && this._viewport) {
+      const wx = merged.worldX !== undefined ? merged.worldX : merged.left;
+      const wy = merged.worldY !== undefined ? merged.worldY : merged.top;
+      const screen = this._viewport.worldToScreen(wx, wy);
+      element.style.setProperty("--panel-left", `${screen.x}px`);
+      element.style.setProperty("--panel-top",  `${screen.y}px`);
+      element.setWorldAnchor(wx, wy);
+      // Sync the pin button visual state if pinnable installed it
+      const pinBtn = element.actionsElement?.querySelector("[data-pin]");
+      if (pinBtn) pinBtn.dataset.active = "true";
+    }
+
     dispatchPanelEvent(element, PANEL_EVENTS.OPEN, { handle, options: merged });
     this.dispatchEvent(new CustomEvent("paneladded", { detail: { handle } }));
 
-    // Clean up the manager's record when the element is destroyed by any path.
     element.addEventListener(PANEL_EVENTS.CLOSE, () => {
       this._handles.delete(handle);
       this.stack.remove(handle);

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · Element-anchored panels</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+  <main class="container py-5">
+    <a href="./index.html" class="text-decoration-none small"><i class="bi bi-chevron-left"></i> back</a>
+
+    <h1 class="display-6 mb-3 mt-3">Element-anchored panels</h1>
+    <p class="text-secondary">
+      Pass <code>coordinateSpace: "element"</code> with an <code>anchorElement</code> to position a panel
+      relative to a DOM element. The panel stays attached as the anchor scrolls or resizes. The built-in
+      collision avoidance (<code>collisionStrategy: "flip"</code>) automatically flips the panel to the
+      opposite side if it would overflow the viewport.
+    </p>
+
+    <div class="d-flex flex-wrap gap-2 my-4">
+      <button id="openBottom"    class="btn btn-primary"><i class="bi bi-chevron-down"></i> Bottom (default)</button>
+      <button id="openTop"       class="btn btn-outline-secondary"><i class="bi bi-chevron-up"></i> Top</button>
+      <button id="openRight"     class="btn btn-outline-secondary"><i class="bi bi-chevron-right"></i> Right</button>
+      <button id="openLeft"      class="btn btn-outline-secondary"><i class="bi bi-chevron-left"></i> Left</button>
+      <button id="openStartEnd"  class="btn btn-outline-secondary"><i class="bi bi-align-start"></i> bottom-start / bottom-end</button>
+      <button id="openFlip"      class="btn btn-outline-secondary btn-sm" style="margin-top:auto">
+        <i class="bi bi-arrows-expand-vertical"></i> Flip demo (near bottom)
+      </button>
+      <button id="closeAll"      class="btn btn-outline-danger ms-auto">Close all</button>
+    </div>
+
+    <pre class="bg-body-tertiary p-3 rounded"><code>import panel from "../index.js";
+
+const anchor = document.getElementById("my-button");
+
+// ── basic ──────────────────────────────────────────────────────────────────────
+panel.open("", "Options", {
+  coordinateSpace: "element",
+  anchorElement: anchor,   // or CSS selector "#my-button"
+  placement: "bottom",     // "top"|"bottom"|"left"|"right"
+                           // + "-start"/"-end" suffix for alignment
+  offset: 8,               // gap between anchor and panel (px)
+  collisionStrategy: "flip",  // "flip"|"shift"|"none"
+  followAnchor: true,      // re-position when anchor moves (default true)
+  width: 280, height: 200
+});
+
+// ── declarative ────────────────────────────────────────────────────────────────
+// &lt;button id="my-btn"&gt;Options&lt;/button&gt;
+// &lt;section id="my-panel" panel
+//          panel-coordinate-space="element"
+//          panel-anchor="my-btn"
+//          panel-placement="bottom"
+//          panel-offset="8"
+//          panel-title="Options"
+//          panel-draggable panel-resizable panel-closable panel-titled panel-escapable&gt;
+//   ...
+// &lt;/section&gt;</code></pre>
+
+    <!-- Declarative example -->
+    <div class="mt-4 d-flex gap-2">
+      <button paneltarget="decl-panel" paneltargetaction="toggle"
+              class="btn btn-outline-info btn-sm" id="declAnchor">
+        <i class="bi bi-code-slash"></i> Toggle declarative panel
+      </button>
+    </div>
+
+    <section id="decl-panel" panel
+             panel-title="Declarative anchored"
+             panel-coordinate-space="element"
+             panel-anchor="declAnchor"
+             panel-placement="bottom"
+             panel-offset="10"
+             panel-draggable panel-resizable panel-closable panel-titled panel-escapable
+             panel-width="300" panel-height="180">
+      <p>This panel is declared entirely in HTML.</p>
+      <p class="text-secondary small">Drag me away — I'll keep following my anchor if you close and reopen.</p>
+    </section>
+  </main>
+
+  <script type="module">
+    import panel from "../index.js";
+
+    const makeContent = (place) => `
+      <p class="mb-1">Placement: <code>${place}</code></p>
+      <p class="text-secondary small mb-0">Drag to reposition. Resize the window near the edge to see collision avoidance.</p>
+    `;
+
+    document.getElementById("openBottom").addEventListener("click", e => {
+      panel.open("", "Bottom panel", {
+        coordinateSpace: "element", anchorElement: e.target,
+        placement: "bottom", offset: 8, width: 280, height: 160
+      }).setHTML(makeContent("bottom"));
+    });
+
+    document.getElementById("openTop").addEventListener("click", e => {
+      panel.open("", "Top panel", {
+        coordinateSpace: "element", anchorElement: e.target,
+        placement: "top", offset: 8, width: 280, height: 160
+      }).setHTML(makeContent("top"));
+    });
+
+    document.getElementById("openRight").addEventListener("click", e => {
+      panel.open("", "Right panel", {
+        coordinateSpace: "element", anchorElement: e.target,
+        placement: "right", offset: 8, width: 280, height: 160
+      }).setHTML(makeContent("right"));
+    });
+
+    document.getElementById("openLeft").addEventListener("click", e => {
+      panel.open("", "Left panel", {
+        coordinateSpace: "element", anchorElement: e.target,
+        placement: "left", offset: 8, width: 280, height: 160
+      }).setHTML(makeContent("left"));
+    });
+
+    document.getElementById("openStartEnd").addEventListener("click", e => {
+      panel.open("", "bottom-start", {
+        coordinateSpace: "element", anchorElement: e.target,
+        placement: "bottom-start", offset: 8, width: 200, height: 120
+      }).setHTML(makeContent("bottom-start"));
+      panel.open("", "bottom-end", {
+        coordinateSpace: "element", anchorElement: e.target,
+        placement: "bottom-end", offset: 8, width: 200, height: 120
+      }).setHTML(makeContent("bottom-end"));
+    });
+
+    // Near-bottom anchor to showcase flip
+    const flipBtn = document.getElementById("openFlip");
+    flipBtn.style.cssText = "position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:500;";
+    document.body.appendChild(flipBtn);
+    flipBtn.addEventListener("click", e => {
+      panel.open("", "Flip demo", {
+        coordinateSpace: "element", anchorElement: e.target,
+        placement: "bottom",       // would clip → flips to top
+        collisionStrategy: "flip",
+        offset: 8, width: 260, height: 120
+      }).setHTML(`<p>This panel was requested <code>bottom</code> but flipped to <code>top</code> to stay on screen.</p>`);
+    });
+
+    document.getElementById("closeAll").addEventListener("click", () => panel.closeAll());
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel API · IFrame panels</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+<body>
+  <main class="container py-5">
+    <a href="./index.html" class="text-decoration-none small"><i class="bi bi-chevron-left"></i> back</a>
+
+    <h1 class="display-6 mb-3 mt-3">IFrame panels</h1>
+    <p class="text-secondary">
+      Pass a URL as the first argument to <code>panel.open()</code> and the body becomes an
+      <code>&lt;iframe&gt;</code> loaded from that URL. All standard panel features (drag, resize,
+      minimize, close) work normally. Use <code>handle.navigate(url)</code> to change the URL
+      after opening and <code>handle.reload()</code> to refresh it.
+    </p>
+
+    <div class="d-flex flex-wrap gap-2 my-4">
+      <button id="openBasic"       class="btn btn-primary"><i class="bi bi-window"></i> Basic URL panel</button>
+      <button id="openSandboxed"   class="btn btn-outline-secondary"><i class="bi bi-shield-lock"></i> Sandboxed</button>
+      <button id="openNavigable"   class="btn btn-outline-secondary"><i class="bi bi-arrow-left-right"></i> Navigate &amp; reload</button>
+      <button id="openDeclarative" class="btn btn-outline-secondary"><i class="bi bi-code-slash"></i> Declarative</button>
+      <button id="closeAll"        class="btn btn-outline-danger ms-auto">Close all</button>
+    </div>
+
+    <pre class="bg-body-tertiary p-3 rounded"><code>import panel from "../index.js";
+
+// ── basic ─────────────────────────────────────────────────────────────────────
+const handle = panel.open("/index.html", "Demo Site", {
+  width: 600, height: 420
+});
+
+// ── sandboxed (restrict iframe permissions) ───────────────────────────────────
+panel.open("/index.html", "Sandboxed", {
+  width: 600, height: 420,
+  sandbox: "allow-scripts allow-same-origin"
+});
+
+// ── navigate &amp; reload ──────────────────────────────────────────────────────────
+const nav = panel.open("/index.html", "Navigator", { width: 600, height: 420 });
+
+nav.addEventListener("panelnavigate", e =&gt; console.log("navigating to", e.detail.url));
+nav.addEventListener("panelload",     e =&gt; console.log("loaded",         e.detail.url));
+
+nav.navigate("/demos/index.html");   // panelnavigate fires first, then panelload
+nav.reload();                        // same as re-assigning src — cross-origin safe
+
+// ── declarative HTML ──────────────────────────────────────────────────────────
+// &lt;button paneltarget="my-frame" paneltargetaction="toggle"&gt;Toggle&lt;/button&gt;
+// &lt;section id="my-frame" panel
+//          panel-title="IFrame Demo"
+//          panel-url="/index.html"
+//          panel-sandbox="allow-scripts allow-same-origin"
+//          panel-draggable panel-resizable panel-closable panel-titled panel-escapable&gt;
+// &lt;/section&gt;</code></pre>
+  </main>
+
+  <!-- ── Declarative example ──────────────────────────────────────────────── -->
+  <button paneltarget="declarative-frame" paneltargetaction="toggle" style="display:none"></button>
+  <section id="declarative-frame" panel
+           panel-title="IFrame (declarative)"
+           panel-url="/index.html"
+           panel-sandbox="allow-scripts allow-same-origin allow-popups"
+           panel-draggable panel-resizable panel-closable panel-titled panel-escapable
+           panel-width="580" panel-height="400"
+           panel-left="120" panel-top="120">
+  </section>
+
+  <script type="module">
+    import panel from "../index.js";
+
+    // ── basic ──────────────────────────────────────────────────────────────────
+    document.getElementById("openBasic").addEventListener("click", () => {
+      const handle = panel.open("/index.html", "Demo Site", {
+        width: 620, height: 440,
+        left: 80 + Math.random() * 120, top: 80 + Math.random() * 80
+      });
+      handle.addEventListener("panelload", e => {
+        console.log("[panelload]", e.detail.url);
+      });
+    });
+
+    // ── sandboxed ─────────────────────────────────────────────────────────────
+    document.getElementById("openSandboxed").addEventListener("click", () => {
+      panel.open("/index.html", "Sandboxed (allow-scripts + allow-same-origin)", {
+        width: 620, height: 440,
+        left: 100 + Math.random() * 120, top: 100 + Math.random() * 80,
+        sandbox: "allow-scripts allow-same-origin"
+      });
+    });
+
+    // ── navigate & reload ──────────────────────────────────────────────────────
+    document.getElementById("openNavigable").addEventListener("click", () => {
+      const handle = panel.open("/index.html", "Navigator", {
+        width: 620, height: 440,
+        left: 120 + Math.random() * 120, top: 120 + Math.random() * 80
+      });
+
+      // Add a small toolbar inside the caption actions area for live nav demo.
+      const nav = document.createElement("span");
+      nav.style.cssText = "display:inline-flex;gap:4px;margin-right:4px;";
+
+      const mkBtn = (label, title, fn) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.setAttribute("part", "action");
+        b.title = title;
+        b.innerHTML = label;
+        b.style.cssText = "display:grid;place-items:center;width:28px;height:28px;border:0;border-radius:8px;background:transparent;color:rgba(244,246,255,.78);cursor:pointer;font:inherit;";
+        b.addEventListener("click", fn);
+        return b;
+      };
+
+      nav.append(
+        mkBtn('<i class="bi bi-arrow-clockwise"></i>', "Reload", () => handle.reload()),
+        mkBtn('<i class="bi bi-house"></i>',           "Go to /index.html", () => handle.navigate("/index.html")),
+        mkBtn('<i class="bi bi-collection"></i>',      "Go to /demos/",     () => handle.navigate("/demos/index.html"))
+      );
+      handle.actions.prepend(nav);
+
+      handle.addEventListener("panelnavigate", e => console.log("[panelnavigate]", e.detail.url));
+      handle.addEventListener("panelload",     e => console.log("[panelload]",     e.detail.url));
+    });
+
+    // ── declarative trigger ────────────────────────────────────────────────────
+    document.getElementById("openDeclarative").addEventListener("click", () => {
+      document.querySelector("[paneltarget='declarative-frame']").click();
+    });
+
+    document.getElementById("closeAll").addEventListener("click", () => panel.closeAll());
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

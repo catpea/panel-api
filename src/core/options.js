@@ -16,7 +16,8 @@ const NUMERIC_KEYS = new Set([
 
 const BOOLEAN_KEYS = new Set([
   "borderless", "modal", "closeOnEscape", "keyboardMove", "keyboardResize",
-  "snap", "followScroll", "followZoom"
+  "snap", "followScroll", "followZoom",
+  "followAnchor", "snapEdges", "snapPanels"
 ]);
 
 /**

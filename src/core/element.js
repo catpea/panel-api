@@ -12,6 +12,7 @@
 // matches, the patch is a no-op.
 
 import { observeCQU, updateCQU } from "./cqu.js";
+import { PANEL_EVENTS, dispatchPanelEvent } from "./events.js";
 
 export const PANEL_TAG = "dom-panel";
 
@@ -46,6 +47,7 @@ export const PanelController = {
 
     this.configure(options);
     this.renderShell();
+    if (this.options.url) this.setupIframe();
     this.installPlugins();
 
     this.dataset.ready = "true";
@@ -188,6 +190,60 @@ export const PanelController = {
   },
 
   /**
+   * Create an <iframe> inside the body for URL-backed panels.
+   * Called automatically from initialize() when options.url is set.
+   * Sets data-url on the element so CSS can remove body padding.
+   */
+  setupIframe() {
+    const { url, sandbox, allow, referrerPolicy, loading, title, iframeName } = this.options;
+    if (!url) return;
+
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("part", "iframe");
+    iframe.title = title || "Panel content";
+    iframe.src = url;
+
+    if (typeof sandbox === "string") iframe.setAttribute("sandbox", sandbox);
+    if (typeof allow === "string") iframe.allow = allow;
+    if (typeof referrerPolicy === "string") iframe.referrerPolicy = referrerPolicy;
+    if (loading === "lazy") iframe.loading = "lazy";
+    if (typeof iframeName === "string") iframe.name = iframeName;
+
+    iframe.addEventListener("load", () => {
+      dispatchPanelEvent(this, PANEL_EVENTS.LOAD, { url: this.options.url });
+    });
+    iframe.addEventListener("error", event => {
+      dispatchPanelEvent(this, PANEL_EVENTS.ERROR, { url: this.options.url, error: event });
+    });
+
+    this.bodyElement.replaceChildren(iframe);
+    this.iframeElement = iframe;
+    this.dataset.url = "";
+  },
+
+  /**
+   * Navigate the embedded iframe to a new URL. No-op if there is no iframe.
+   * Dispatches `panelnavigate` before changing src; cancelable.
+   */
+  navigate(url) {
+    if (!this.iframeElement) return false;
+    const allowed = dispatchPanelEvent(this, PANEL_EVENTS.NAVIGATE, { url }, { cancelable: true });
+    if (!allowed) return false;
+    this.options.url = url;
+    this.iframeElement.src = url;
+    return true;
+  },
+
+  /**
+   * Reload the embedded iframe. Cross-origin safe — reassigns src rather than
+   * calling contentWindow.location.reload().
+   */
+  reload() {
+    if (!this.iframeElement) return;
+    this.iframeElement.src = this.iframeElement.src;
+  },
+
+  /**
    * Replace body content. Accepts a Node (preferred) or an HTML string.
    * String content uses innerHTML — callers are responsible for trust.
    */
@@ -197,6 +253,16 @@ export const PanelController = {
     if (markupOrNode instanceof Node) this.bodyElement.append(markupOrNode);
     else this.bodyElement.innerHTML = String(markupOrNode);
     updateCQU(this.bodyElement);
+  },
+
+  /**
+   * Mark the panel as pinned to world coordinates. Called by the manager when
+   * `coordinateSpace: "world"` is used so the `pinnable` plugin's `sync()`
+   * listener picks up the anchor without requiring a button click.
+   */
+  setWorldAnchor(worldX, worldY) {
+    this.dataset.pinned = "true";
+    this._worldAnchor = { x: worldX, y: worldY };
   },
 
   /** Update the displayed title without re-rendering the shell. */

@@ -11,10 +11,22 @@
 const STYLE_MARKER = "data-panel-api-styles";
 
 export const defaultStyles = /* css */ `
-  /* ---------- panel layer ---------- */
+  /* ---------- panel layers ---------- */
   .panel-layer {
     position: fixed;
     inset: 0;
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* Document-space panels scroll with the page. The layer itself has no
+     size so it never affects page layout; panels overflow it naturally. */
+  .panel-document-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
     pointer-events: none;
     z-index: 1000;
   }
@@ -149,6 +161,20 @@ export const defaultStyles = /* css */ `
     height: 7px;
     border-right: 2px solid currentColor;
     border-bottom: 2px solid currentColor;
+  }
+
+  /* ---------- iframe body ---------- */
+  /* Remove body padding and overflow scroll so the iframe fills flush. */
+  dom-panel[data-url] [part~="body"] {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  dom-panel [part~="iframe"] {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
   }
 
   /* ---------- reduced motion ---------- */
